@@ -1,379 +1,143 @@
 /*
- * D1Mini_WiFiBridge.ino
- * WiFi bridge for Chicken Trainer ranking system.
- * Board: ESP8266 D1 Mini
- *
- * Reads score data from Arduino Mega over Serial,
- * POSTs to the ranking server, and optionally returns
- * the top leaderboard entries back over Serial.
- *
- * Dependencies (install via Arduino Library Manager):
- *   - ESP8266WiFi      (bundled with ESP8266 core)
- *   - ESP8266HTTPClient (bundled with ESP8266 core)
- *   - ArduinoJson v6.x  (by Benoit Blanchon)
+ * D1Mini_WiFiBridge.ino — production
+ * Mega Serial1 → D1 Mini Serial → POST 到 Render 雲端
  */
-
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
-#include <WiFiClient.h>
 #include <WiFiClientSecure.h>
-#include <ArduinoJson.h>
 
 // ============================================================
-// === CONFIG (change these) ===
+// CONFIG
 // ============================================================
-// 多 WiFi 模式 — 開機自動掃描，連最強的那個
-// 加新 WiFi 只要在 setup() 裡 wifiMulti.addAP(...) 多加一行
-const char* WIFI_SSID_HOME = "Home XD4";
-const char* WIFI_PASS_HOME = "0933997111213";
-
-const char* WIFI_SSID_PHONE = "JIPXV";               // 比賽用手機熱點
+const char* WIFI_SSID_HOME  = "Home XD4";
+const char* WIFI_PASS_HOME  = "0933997111213";
+const char* WIFI_SSID_PHONE = "JIPXV";
 const char* WIFI_PASS_PHONE = "88888888";
-
-// 雲端 server (Render free tier，閒置會休眠 30 秒喚醒)
-const char* SERVER_URL    = "https://chickentrainer-webranking.onrender.com";
-const char* DEVICE_KEY    = "CHICKEN_SECRET_2026";
-
-ESP8266WiFiMulti wifiMulti;
-// ============================================================
-
-// Built-in LED pin for D1 Mini
-#define LED_PIN LED_BUILTIN
-
-// Serial baud rate (must match Arduino Mega)
-#define SERIAL_BAUD 9600
-
-// How long to try WiFi connection before giving up (ms)
+const char* SERVER     = "https://chickentrainer-webranking.onrender.com";
+const char* DEVICE_KEY = "CHICKEN_SECRET_2026";
 #define WIFI_TIMEOUT_MS 20000
-
-// Buffer for incoming serial line
-static char lineBuf[256];
-static uint8_t linePos = 0;
-
-// ============================================================
-// Helpers
 // ============================================================
 
-void blinkLED(int times, int delayMs = 100) {
-  for (int i = 0; i < times; i++) {
-    digitalWrite(LED_PIN, LOW);   // active LOW on D1 Mini
-    delay(delayMs);
-    digitalWrite(LED_PIN, HIGH);
-    delay(delayMs);
+#define LED LED_BUILTIN
+char lineBuf[200];
+uint8_t linePos = 0;
+
+void blinkLED(int n, int ms) {
+  for (int i = 0; i < n; i++) {
+    digitalWrite(LED, LOW); delay(ms);
+    digitalWrite(LED, HIGH); delay(ms);
   }
 }
 
-String buildURL(const char* endpoint) {
-  String url = SERVER_URL;
-  url += endpoint;
-  return url;
-}
-
-// Convert numeric difficulty to string
-// 0 = EASY, 1 = NORMAL, 2 = HARD
-String diffToStr(int diff) {
-  if (diff == 0) return "EASY";
-  if (diff == 2) return "HARD";
-  return "NORMAL";
-}
-
-// ============================================================
-// WiFi management
-// ============================================================
-
-bool connectWiFi() {
-  Serial.println("[WiFi] Scanning known networks...");
-  WiFi.mode(WIFI_STA);
-  // 加入所有已知 WiFi（依信號強度自動選最強）
-  wifiMulti.addAP(WIFI_SSID_HOME,  WIFI_PASS_HOME);
-  wifiMulti.addAP(WIFI_SSID_PHONE, WIFI_PASS_PHONE);
-
+bool tryWiFi(const char* ssid, const char* pass) {
+  Serial.print("[WiFi] try "); Serial.print(ssid); Serial.print(" ");
+  WiFi.disconnect();
+  delay(100);
+  WiFi.begin(ssid, pass);
   unsigned long start = millis();
-  while (wifiMulti.run() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     if (millis() - start > WIFI_TIMEOUT_MS) {
-      Serial.println("\n[WiFi] All networks unreachable!");
+      Serial.println(" [TIMEOUT]");
       return false;
     }
     delay(500);
     Serial.print(".");
   }
   Serial.println();
-  Serial.print("[WiFi] Connected to: ");
-  Serial.println(WiFi.SSID());
-  Serial.print("[WiFi] IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.print("[WiFi] connected: "); Serial.println(WiFi.SSID());
+  Serial.print("[IP] ");              Serial.println(WiFi.localIP());
   blinkLED(3, 150);
   return true;
 }
 
-void ensureWiFi() {
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("[WiFi] Reconnecting via wifiMulti...");
-    unsigned long start = millis();
-    while (wifiMulti.run() != WL_CONNECTED && millis() - start < WIFI_TIMEOUT_MS) {
-      delay(500);
-      Serial.print(".");
-    }
-    Serial.println();
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.print("[WiFi] Reconnected to: ");
-      Serial.println(WiFi.SSID());
-    } else {
-      Serial.println("[WiFi] Reconnect failed.");
-    }
-  }
+bool connectWiFi() {
+  WiFi.mode(WIFI_STA);
+  // 先試家裡，連不上再試手機熱點
+  if (tryWiFi(WIFI_SSID_HOME, WIFI_PASS_HOME)) return true;
+  if (tryWiFi(WIFI_SSID_PHONE, WIFI_PASS_PHONE)) return true;
+  Serial.println("[WiFi] all failed");
+  return false;
 }
 
-// ============================================================
-// Sync score to server
-// Returns the global rank (1-based), or 0 on failure
-// ============================================================
-
-int syncScore(const String& name, int score, int survival, int duration, int diffNum) {
-  ensureWiFi();
-  if (WiFi.status() != WL_CONNECTED) return 0;
-
-  // HTTPS — 用 WiFiClientSecure + setInsecure 跳過憑證驗證（demo 簡化）
-  WiFiClientSecure client;
-  client.setInsecure();
-  HTTPClient http;
-  http.setTimeout(30000);  // 30 秒，因 Render free tier 有可能要喚醒
-
-  String url = buildURL("/api/sync");
-  http.begin(client, url);
-  http.addHeader("Content-Type", "application/json");
-
-  // Build JSON body
-  StaticJsonDocument<256> doc;
-  doc["name"]       = name;
-  doc["score"]      = score;
-  doc["survival"]   = survival;
-  doc["duration"]   = duration;
-  doc["difficulty"] = diffToStr(diffNum);
-  doc["device_key"] = DEVICE_KEY;
-
-  String body;
-  serializeJson(doc, body);
-
-  Serial.println("[HTTP] POST /api/sync  body: " + body);
-  int httpCode = http.POST(body);
-
-  int rank = 0;
-  if (httpCode == 200 || httpCode == 201) {
-    String response = http.getString();
-    Serial.println("[HTTP] Response: " + response);
-
-    StaticJsonDocument<256> resp;
-    DeserializationError err = deserializeJson(resp, response);
-    if (!err && resp["ok"]) {
-      rank = resp["rank"] | 0;
-      blinkLED(5, 80);  // success blink
-      Serial.print("[SYNC] OK — rank: ");
-      Serial.println(rank);
-    }
-  } else {
-    Serial.print("[HTTP] Error code: ");
-    Serial.println(httpCode);
-    blinkLED(2, 400);  // error blink (slow)
-  }
-  http.end();
-  return rank;
-}
-
-// ============================================================
-// Fetch leaderboard and send back to Mega
-// Format: RANK1:Name:Score\n  RANK2:Name:Score\n  ...
-// ============================================================
-
-void fetchAndSendLeaderboard(int limit = 5) {
-  ensureWiFi();
+void doUpload(int sc, int sv, int dr, int df) {
+  if (WiFi.status() != WL_CONNECTED) connectWiFi();
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("LEADERBOARD_FAIL");
+    Serial.println("SYNC_FAIL");
     return;
   }
-
   WiFiClientSecure client;
   client.setInsecure();
+  client.setTimeout(45000);
   HTTPClient http;
-  http.setTimeout(30000);
-
-  String url = buildURL("/api/leaderboard");
-  url += "?limit=";
-  url += limit;
-
-  http.begin(client, url);
-  int httpCode = http.GET();
-
-  if (httpCode == 200) {
-    String response = http.getString();
-    Serial.println("[HTTP] Leaderboard: " + response);
-
-    // Parse array
-    StaticJsonDocument<1024> doc;
-    DeserializationError err = deserializeJson(doc, response);
-    if (!err && doc.is<JsonArray>()) {
-      JsonArray arr = doc.as<JsonArray>();
-      for (JsonObject entry : arr) {
-        int    r    = entry["rank"]  | 0;
-        String n    = entry["name"].as<String>();
-        int    s    = entry["score"] | 0;
-        // Send to Mega via Serial
-        // Format: RANK1:PlayerName:95
-        Serial.print("RANK");
-        Serial.print(r);
-        Serial.print(":");
-        Serial.print(n);
-        Serial.print(":");
-        Serial.println(s);
-      }
-    }
+  http.setTimeout(45000);
+  String url = String(SERVER) + "/api/sync";
+  if (!http.begin(client, url)) {
+    Serial.println("SYNC_FAIL");
+    return;
+  }
+  http.addHeader("Content-Type", "application/json");
+  String body = "{\"name\":\"Device\",\"score\":";
+  body += sc; body += ",\"survival\":"; body += sv;
+  body += ",\"duration\":"; body += dr;
+  body += ",\"difficulty\":\"";
+  body += (df == 0 ? "EASY" : (df == 2 ? "HARD" : "NORMAL"));
+  body += "\",\"device_key\":\""; body += DEVICE_KEY; body += "\"}";
+  Serial.println("[POST] " + body);
+  int code = http.POST(body);
+  Serial.printf("[POST] code=%d\n", code);
+  if (code == 200 || code == 201) {
+    String resp = http.getString();
+    Serial.println("[RESP] " + resp);
+    int p = resp.indexOf("\"rank\":");
+    int rank = (p >= 0) ? resp.substring(p + 7).toInt() : 0;
+    Serial.printf("SYNC_OK:RANK:%d:NAME:Device:SCORE:%d\n", rank, sc);
+    blinkLED(5, 80);
   } else {
-    Serial.print("[HTTP] Leaderboard error: ");
-    Serial.println(httpCode);
+    Serial.printf("[POST] err: %s\n", http.errorToString(code).c_str());
+    Serial.println("SYNC_FAIL");
+    blinkLED(2, 400);
   }
   http.end();
 }
 
-// ============================================================
-// Parse incoming serial line from Mega
-//
-// Expected format (newline-terminated):
-//   SCORE:95,SURV:88,DUR:72,DIFF:1,NAME:Johnny
-//
-// Fields:
-//   SCORE  — integer 0-100
-//   SURV   — survival rate 0-100
-//   DUR    — duration in seconds
-//   DIFF   — 0=EASY 1=NORMAL 2=HARD
-//   NAME   — player name string
-// ============================================================
-
-bool parseLine(const char* line, String& nameOut, int& scoreOut, int& survOut, int& durOut, int& diffOut) {
-  // Make a mutable copy
-  char buf[256];
-  strncpy(buf, line, sizeof(buf) - 1);
-  buf[sizeof(buf)-1] = '\0';
-
-  nameOut  = "Player";
-  scoreOut = 0;
-  survOut  = 0;
-  durOut   = 0;
-  diffOut  = 1;
-
-  bool hasScore = false;
-
-  char* token = strtok(buf, ",");
-  while (token != nullptr) {
-    String tok = String(token);
-    tok.trim();
-
-    int colonIdx = tok.indexOf(':');
-    if (colonIdx < 0) { token = strtok(nullptr, ","); continue; }
-
-    String key = tok.substring(0, colonIdx);
-    String val = tok.substring(colonIdx + 1);
-    key.trim(); val.trim();
-    key.toUpperCase();
-
-    if (key == "SCORE") { scoreOut = val.toInt(); hasScore = true; }
-    else if (key == "SURV")  survOut  = val.toInt();
-    else if (key == "DUR")   durOut   = val.toInt();
-    else if (key == "DIFF")  diffOut  = val.toInt();
-    else if (key == "NAME")  nameOut  = val;
-
-    token = strtok(nullptr, ",");
-  }
-  return hasScore;
-}
-
-// ============================================================
-// Setup
-// ============================================================
-
 void setup() {
-  pinMode(LED_PIN, OUTPUT);
-  digitalWrite(LED_PIN, HIGH);  // LED off (active LOW)
-
-  Serial.begin(SERIAL_BAUD);
-  delay(500);
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
+  Serial.begin(9600);
+  delay(2000);
   Serial.println();
-  Serial.println("=== Chicken Trainer WiFi Bridge ===");
-  Serial.print("Firmware built: ");
-  Serial.println(__DATE__ " " __TIME__);
-
-  // Initial WiFi connection
-  if (!connectWiFi()) {
-    Serial.println("[WARN] Starting without WiFi. Will retry on first sync.");
-  }
-
-  Serial.println("[READY] Waiting for data from Mega...");
-  Serial.println("[FORMAT] SCORE:95,SURV:88,DUR:72,DIFF:1,NAME:Johnny");
+  Serial.println("=== Chicken WiFi Bridge ===");
+  Serial.printf("Heap: %d\n", ESP.getFreeHeap());
+  connectWiFi();
+  Serial.println("READY");
 }
-
-// ============================================================
-// Loop
-// ============================================================
 
 void loop() {
-  // Read bytes from Serial (from Mega)
+  // Read line from Serial (Mega 送來的 SCORE:xx,SURV:xx,DUR:xx,DIFF:xx,NAME:xxx)
   while (Serial.available()) {
-    char c = (char)Serial.read();
-
+    char c = Serial.read();
+    Serial.printf("[byte] 0x%02X '%c'\n", (uint8_t)c, (c >= 32 && c < 127) ? c : '?');
     if (c == '\n' || c == '\r') {
       if (linePos > 0) {
-        lineBuf[linePos] = '\0';
+        lineBuf[linePos] = 0;
+        Serial.print("[RX] "); Serial.println(lineBuf);
+        int sc=0,sv=0,dr=0,df=1;
+        char *p;
+        if ((p=strstr(lineBuf,"SCORE:"))) sc=atoi(p+6);
+        if ((p=strstr(lineBuf,"SURV:")))  sv=atoi(p+5);
+        if ((p=strstr(lineBuf,"DUR:")))   dr=atoi(p+4);
+        if ((p=strstr(lineBuf,"DIFF:")))  df=atoi(p+5);
+        doUpload(sc, sv, dr, df);
         linePos = 0;
-
-        String line = String(lineBuf);
-        line.trim();
-
-        if (line.length() == 0) continue;
-
-        Serial.println("[RX] " + line);
-
-        // Special command: request leaderboard
-        if (line.equalsIgnoreCase("LEADERBOARD")) {
-          fetchAndSendLeaderboard(5);
-          continue;
-        }
-
-        // Parse score data
-        String name;
-        int score, surv, dur, diff;
-        if (parseLine(lineBuf, name, score, surv, dur, diff)) {
-          int rank = syncScore(name, score, surv, dur, diff);
-          if (rank > 0) {
-            // Send result back to Mega
-            Serial.print("SYNC_OK:RANK:");
-            Serial.print(rank);
-            Serial.print(":NAME:");
-            Serial.print(name);
-            Serial.print(":SCORE:");
-            Serial.println(score);
-          } else {
-            Serial.println("SYNC_FAIL");
-          }
-        } else {
-          Serial.println("[WARN] Could not parse line: " + line);
-        }
       }
-    } else {
-      if (linePos < sizeof(lineBuf) - 1) {
-        lineBuf[linePos++] = c;
-      }
+    } else if (linePos < sizeof(lineBuf) - 1) {
+      lineBuf[linePos++] = c;
     }
   }
-
-  // Periodic WiFi health check (every 30 seconds)
+  // 健康檢查
   static unsigned long lastCheck = 0;
-  if (millis() - lastCheck > 30000) {
+  if (millis() - lastCheck > 60000) {
     lastCheck = millis();
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("[WiFi] Lost connection, reconnecting...");
-      ensureWiFi();
-    }
+    if (WiFi.status() != WL_CONNECTED) connectWiFi();
   }
-
-  delay(10);
 }

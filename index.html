@@ -1219,6 +1219,7 @@ body.hero-active #header-title { opacity: 0; pointer-events: none; }
         <button class="chip chip-easy" data-diff="EASY" data-i18n="diffEASY">簡單</button>
         <button class="chip chip-normal" data-diff="NORMAL" data-i18n="diffNORMAL">普通</button>
         <button class="chip chip-hard" data-diff="HARD" data-i18n="diffHARD">困難</button>
+        <button class="chip" data-sort="date" style="background:rgba(0,180,255,0.15);color:#0090d8;font-weight:700;">🆕 最新</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button id="filter-toggle-btn" class="btn-secondary" style="padding:5px 12px;font-size:0.82rem;" data-i18n="btnFilter" onclick="toggleFilterPanel()">搜尋</button>
@@ -4146,7 +4147,16 @@ document.querySelectorAll('#diff-chips .chip').forEach(chip => {
   chip.onclick = () => {
     document.querySelectorAll('#diff-chips .chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
-    pubDiff = chip.dataset.diff;
+    // 最新 chip：切換排序為日期，難度設為總覽
+    if (chip.dataset.sort === 'date') {
+      pubDiff = '';
+      pubPage = 1;
+      const sel = document.getElementById('sort-select');
+      if (sel) sel.value = 'date';
+      loadPublicRecords();
+      return;
+    }
+    pubDiff = chip.dataset.diff || '';
     pubPage = 1;
     loadPublicRecords();
   };

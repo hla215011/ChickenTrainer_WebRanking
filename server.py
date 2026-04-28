@@ -684,13 +684,11 @@ class ChickenHandler(BaseHTTPRequestHandler):
 
         data = load_data()
 
-        # Check if device is registered — if not, mark as unapproved
-        # Exception: online simulator uploads are always approved
+        # 自動核准所有上傳（device_key 對就放行，不再卡審核）
         device_key = body.get("device_key", "")
         registered_device = find_device_by_key(data, device_key)
-        device_registered = any(d.get("id") == device_id for d in data.get("devices", []))
         is_simulator = (device_id == "simulator" or body.get("source") == "simulator")
-        approved = device_registered or is_simulator
+        approved = True  # ← 改成全部自動核准
 
         rename_code = make_rename_code()
         rename_pin  = make_rename_pin()
