@@ -119,22 +119,22 @@ void doUpload(int sc, int sv, int dr, int df) {
     Serial.println("[RESP] " + resp);
     int p = resp.indexOf("\"rank\":");
     int rank = (p >= 0) ? resp.substring(p + 7).toInt() : 0;
-    // 解析 rename_code & rename_pin（用 strlen 算正確 offset，避免 off-by-one）
+    // 解析 rename_code & rename_pin
+    // ⚠ Python json.dumps() 預設輸出 `"key": "value"` (冒號後有空格)，
+    //   所以不能寫死 `"key":"value"` 找 — 改成「找 key → 跳到下一個 " → 讀到下個 "」
+    //   這樣有沒有空白、tab、換行都不影響
     String rc = "", rp = "";
-    const char* keyCode = "\"rename_code\":\"";  // 15 chars
-    const char* keyPin  = "\"rename_pin\":\"";   // 14 chars
-    int pc = resp.indexOf(keyCode);
-    if (pc >= 0) {
-      int valStart = pc + strlen(keyCode);
-      int qc = resp.indexOf("\"", valStart);
-      if (qc > valStart) rc = resp.substring(valStart, qc);
-    }
-    int pp = resp.indexOf(keyPin);
-    if (pp >= 0) {
-      int valStart = pp + strlen(keyPin);
-      int qp = resp.indexOf("\"", valStart);
-      if (qp > valStart) rp = resp.substring(valStart, qp);
-    }
+    auto extractStr = [&](const char* key) -> String {
+      int p = resp.indexOf(key);
+      if (p < 0) return "";
+      int o = resp.indexOf('"', p + strlen(key));   // value 的開引號
+      if (o < 0) return "";
+      int c = resp.indexOf('"', o + 1);             // value 的關引號
+      if (c <= o) return "";
+      return resp.substring(o + 1, c);
+    };
+    rc = extractStr("\"rename_code\"");
+    rp = extractStr("\"rename_pin\"");
     Serial.printf("SYNC_OK:RANK:%d:CODE:%s:PIN:%s\n", rank, rc.c_str(), rp.c_str());
     blinkLED(5, 80);
   } else {
