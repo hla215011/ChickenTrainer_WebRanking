@@ -119,7 +119,23 @@ void doUpload(int sc, int sv, int dr, int df) {
     Serial.println("[RESP] " + resp);
     int p = resp.indexOf("\"rank\":");
     int rank = (p >= 0) ? resp.substring(p + 7).toInt() : 0;
-    Serial.printf("SYNC_OK:RANK:%d:NAME:Device:SCORE:%d\n", rank, sc);
+    // 解析 rename_code & rename_pin（用 strlen 算正確 offset，避免 off-by-one）
+    String rc = "", rp = "";
+    const char* keyCode = "\"rename_code\":\"";  // 15 chars
+    const char* keyPin  = "\"rename_pin\":\"";   // 14 chars
+    int pc = resp.indexOf(keyCode);
+    if (pc >= 0) {
+      int valStart = pc + strlen(keyCode);
+      int qc = resp.indexOf("\"", valStart);
+      if (qc > valStart) rc = resp.substring(valStart, qc);
+    }
+    int pp = resp.indexOf(keyPin);
+    if (pp >= 0) {
+      int valStart = pp + strlen(keyPin);
+      int qp = resp.indexOf("\"", valStart);
+      if (qp > valStart) rp = resp.substring(valStart, qp);
+    }
+    Serial.printf("SYNC_OK:RANK:%d:CODE:%s:PIN:%s\n", rank, rc.c_str(), rp.c_str());
     blinkLED(5, 80);
   } else {
     Serial.printf("[POST] err: %s\n", http.errorToString(code).c_str());

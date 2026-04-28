@@ -490,7 +490,8 @@ body.dark .chip { background: rgba(255,255,255,0.08); }
 .chip-easy.active { background: var(--easy); color: #fff; box-shadow: 0 2px 10px rgba(52,199,89,0.35); }
 .chip-normal.active { background: var(--normal); color: #fff; box-shadow: 0 2px 10px rgba(255,159,10,0.35); }
 .chip-hard.active { background: var(--hard); color: #fff; box-shadow: 0 2px 10px rgba(255,59,48,0.35); }
-.chip:hover:not(.chip-all):not(.chip-easy):not(.chip-normal):not(.chip-hard) { background: rgba(0,0,0,0.1); }
+.chip-latest.active { background: var(--accent); color: #fff; box-shadow: 0 2px 10px rgba(0,113,227,0.35); }
+.chip:hover:not(.chip-all):not(.chip-easy):not(.chip-normal):not(.chip-hard):not(.chip-latest) { background: rgba(0,0,0,0.1); }
 
 /* ===== Difficulty badge ===== */
 .diff-badge { padding: 2px 9px; border-radius: 980px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; display: inline-block; }
@@ -1219,7 +1220,7 @@ body.hero-active #header-title { opacity: 0; pointer-events: none; }
         <button class="chip chip-easy" data-diff="EASY" data-i18n="diffEASY">簡單</button>
         <button class="chip chip-normal" data-diff="NORMAL" data-i18n="diffNORMAL">普通</button>
         <button class="chip chip-hard" data-diff="HARD" data-i18n="diffHARD">困難</button>
-        <button class="chip" data-sort="date" style="background:rgba(0,180,255,0.15);color:#0090d8;font-weight:700;">🆕 最新</button>
+        <button class="chip chip-latest" data-sort="date" data-i18n="chipLatest">最新</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
         <button id="filter-toggle-btn" class="btn-secondary" style="padding:5px 12px;font-size:0.82rem;" data-i18n="btnFilter" onclick="toggleFilterPanel()">搜尋</button>
@@ -3305,7 +3306,7 @@ const LANG = {
     logoutBtn: '登出', adminLoginLink: '管理員登入',
     footerCopy: '© 2026 智能閹雞模型',
     diffEASY: '簡單', diffNORMAL: '普通', diffHARD: '困難',
-    chipAll: '總覽', btnFilter: '搜尋', buyLink: '購買模擬器',
+    chipAll: '總覽', chipLatest: '最新', btnFilter: '搜尋', buyLink: '購買模擬器',
     noData: '無資料',
   },
   'en': {
@@ -3319,7 +3320,7 @@ const LANG = {
     logoutBtn: 'Logout', adminLoginLink: 'Admin Login',
     footerCopy: '© 2026 Smart Chicken AI',
     diffEASY: 'Easy', diffNORMAL: 'Normal', diffHARD: 'Hard',
-    chipAll: 'All', btnFilter: 'Search', buyLink: '🛒 Buy Simulator',
+    chipAll: 'All', chipLatest: 'Latest', btnFilter: 'Search', buyLink: '🛒 Buy Simulator',
     noData: 'No data',
   },
   'ja': {
@@ -3333,7 +3334,7 @@ const LANG = {
     logoutBtn: 'ログアウト', adminLoginLink: '管理者ログイン',
     footerCopy: '© 2026 スマート閹雞AI',
     diffEASY: '簡単', diffNORMAL: '普通', diffHARD: '難しい',
-    chipAll: '全て', btnFilter: '検索', buyLink: '🛒 シミュレーター購入',
+    chipAll: '全て', chipLatest: '最新', btnFilter: '検索', buyLink: '🛒 シミュレーター購入',
     noData: 'データなし',
   },
   'ko': {
@@ -3347,7 +3348,7 @@ const LANG = {
     logoutBtn: '로그아웃', adminLoginLink: '관리자 로그인',
     footerCopy: '© 2026 스마트 닭 AI',
     diffEASY: '쉬움', diffNORMAL: '보통', diffHARD: '어려움',
-    chipAll: '전체', btnFilter: '검색', buyLink: '🛒 시뮬레이터 구매',
+    chipAll: '전체', chipLatest: '최신', btnFilter: '검색', buyLink: '🛒 시뮬레이터 구매',
     noData: '데이터 없음',
   }
 };
