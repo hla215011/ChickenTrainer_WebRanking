@@ -17,6 +17,7 @@
 #include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
 // ============================================================
@@ -30,8 +31,8 @@ const char* WIFI_PASS_HOME = "0933997111213";
 const char* WIFI_SSID_PHONE = "JIPXV";               // 比賽用手機熱點
 const char* WIFI_PASS_PHONE = "88888888";
 
-const char* SERVER_IP     = "192.168.89.32";        // Mac LAN IP（家裡用）
-const int   SERVER_PORT   = 8080;
+// 雲端 server (Render free tier，閒置會休眠 30 秒喚醒)
+const char* SERVER_URL    = "https://chickentrainer-webranking.onrender.com";
 const char* DEVICE_KEY    = "CHICKEN_SECRET_2026";
 
 ESP8266WiFiMulti wifiMulti;
@@ -64,10 +65,7 @@ void blinkLED(int times, int delayMs = 100) {
 }
 
 String buildURL(const char* endpoint) {
-  String url = "http://";
-  url += SERVER_IP;
-  url += ":";
-  url += SERVER_PORT;
+  String url = SERVER_URL;
   url += endpoint;
   return url;
 }
@@ -136,8 +134,11 @@ int syncScore(const String& name, int score, int survival, int duration, int dif
   ensureWiFi();
   if (WiFi.status() != WL_CONNECTED) return 0;
 
-  WiFiClient client;
+  // HTTPS — 用 WiFiClientSecure + setInsecure 跳過憑證驗證（demo 簡化）
+  WiFiClientSecure client;
+  client.setInsecure();
   HTTPClient http;
+  http.setTimeout(30000);  // 30 秒，因 Render free tier 有可能要喚醒
 
   String url = buildURL("/api/sync");
   http.begin(client, url);
@@ -192,8 +193,10 @@ void fetchAndSendLeaderboard(int limit = 5) {
     return;
   }
 
-  WiFiClient client;
+  WiFiClientSecure client;
+  client.setInsecure();
   HTTPClient http;
+  http.setTimeout(30000);
 
   String url = buildURL("/api/leaderboard");
   url += "?limit=";
