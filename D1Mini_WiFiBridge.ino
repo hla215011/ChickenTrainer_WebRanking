@@ -154,6 +154,8 @@ void setup() {
   Serial.println("=== Chicken WiFi Bridge ===");
   Serial.printf("Heap: %d\n", ESP.getFreeHeap());
   connectWiFi();
+  // 開機即發 heartbeat，讓 Mega 左上角圖示立刻反應
+  Serial.println(WiFi.status() == WL_CONNECTED ? "WIFI:OK" : "WIFI:NO");
   Serial.println("READY");
 }
 
@@ -161,7 +163,7 @@ void loop() {
   // Read line from Serial (Mega 送來的 SCORE:xx,SURV:xx,DUR:xx,DIFF:xx,NAME:xxx)
   while (Serial.available()) {
     char c = Serial.read();
-    Serial.printf("[byte] 0x%02X '%c'\n", (uint8_t)c, (c >= 32 && c < 127) ? c : '?');
+    // [byte] 0xXX debug 已移除：每收一個 byte 都會回傳給 Mega 反而把 RX 灌爆
     if (c == '\n' || c == '\r') {
       if (linePos > 0) {
         lineBuf[linePos] = 0;
@@ -184,10 +186,22 @@ void loop() {
       lineBuf[linePos++] = c;
     }
   }
-  // 健康檢查
-  static unsigned long lastCheck = 0;
-  if (millis() - lastCheck > 60000) {
-    lastCheck = millis();
-    if (WiFi.status() != WL_CONNECTED) connectWiFi();
+  // 健康檢查 + WiFi heartbeat（每 10 秒推送 WIFI:OK / WIFI:NO 給 Mega 顯示左上角圖示）
+  static unsigned long lastWifiPing = 0;
+  if (millis() - lastWifiPing > 10000) {
+    lastWifiPing = millis();
+    bool ok = (WiFi.status() == WL_CONNECTED);
+    Serial.println(ok ? "WIFI:OK" : "WIFI:NO");
+    // 順便：60 秒沒連 WiFi 就嘗試重連（從原本 60s 心跳改成這裡）
+    static uint8_t reconnectCounter = 0;
+    if (!ok) {
+      reconnectCounter++;
+      if (reconnectCounter >= 6) {  // 6 × 10s = 60s
+        reconnectCounter = 0;
+        connectWiFi();
+      }
+    } else {
+      reconnectCounter = 0;
+    }
   }
 }
