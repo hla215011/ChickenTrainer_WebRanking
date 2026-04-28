@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>閹知公福 — 線上模擬器</title>
+<style>
+:root {
+  --bg: #1a1a2e; --card: #16213e; --text: #e8eaf6;
+  --text-muted: #9e9e9e; --border: #2d3748;
+  --accent: #3949ab; --accent-light: #7986cb;
+  --easy: #2e7d32; --normal: #f57c00; --hard: #c62828;
+  --h1-color: #43a047; --h2-color: #f9a825; --h3-color: #e53935;
+  --radius: 10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+a { color: var(--accent-light); text-decoration: none; }
+button { cursor: pointer; font-family: inherit; border: none; transition: opacity 0.15s, transform 0.1s; }
+button:active { transform: scale(0.96); }
+button:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+/* ── Top bar ── */
+#topbar {
+  background: #0f0f1a; padding: 10px 20px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+#topbar a { font-size: 0.85rem; color: var(--accent-light); }
+#topbar h1 { font-size: 1rem; font-weight: 700; flex: 1; }
+#diff-select {
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 5px 10px; font-size: 0.85rem;
+}
+
+/* ── Main layout ── */
+#sim-wrap {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  padding: 20px 16px 30px; gap: 16px;
+}
+
+/* ── TFT Screen ── */
+#screen-area {
+  position: relative;
+  width: 100%; max-width: 540px;
+  border-radius: 12px; overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  border: 3px solid #333; background: #000;
+  aspect-ratio: 3/2;
+}
+#screen-img {
+  width: 100%; height: 100%;
+  object-fit: fill; display: block;
+  image-rendering: pixelated;
+}
+/* Clickable overlay buttons on home screen */
+.screen-btn {
+  position: absolute; cursor: pointer;
+  background: transparent; border: none;
+  border-radius: 999px; padding: 0;
+}
+/* Dynamic overlays */
+#overlay-exam {
+  position: absolute; inset: 0;
+  display: none; pointer-events: none;
+}
+.exam-box {
+  position: absolute;
+  font-weight: 900; text-align: center;
+  line-height: 1;
+}
+#ov-deduct {
+  /* Left box - instant deduction */
+  left: 4%; top: 35%; width: 44%;
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  color: #ef5350;
+}
+#ov-score {
+  /* Right box - current score */
+  right: 4%; top: 35%; width: 44%;
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  color: #fff;
+}
+#overlay-result {
+  position: absolute; inset: 0;
+  display: none; pointer-events: none;
+}
+#ov-total {
+  position: absolute;
+  left: 4%; top: 38%; width: 44%;
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  font-weight: 900; text-align: center;
+  color: #fff;
+}
+#ov-survival {
+  position: absolute;
+  right: 4%; top: 38%; width: 44%;
+  font-size: clamp(1.6rem, 6vw, 2.8rem);
+  font-weight: 900; text-align: center;
+  color: #fff;
+}
+
+/* ── Timer strip ── */
+#timer-strip {
+  display: none;
+  font-size: 1.4rem; font-weight: 700; letter-spacing: 0.08em;
+  color: var(--accent-light); text-align: center;
+  padding: 4px 0;
+}
+
+/* ── Sensor panel ── */
+#sensor-panel {
+  display: none;
+  width: 100%; max-width: 540px;
+  display: flex; gap: 10px;
+}
+.sensor-btn {
+  flex: 1; padding: 14px 8px;
+  border-radius: var(--radius);
+  font-size: 0.95rem; font-weight: 700;
+  color: #fff; border: none;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 4px;
+}
+.sensor-btn .s-icon { font-size: 1.6rem; }
+.sensor-btn .s-label { font-size: 0.75rem; font-weight: 400; opacity: 0.85; }
+#btn-h1 { background: var(--h1-color); }
+#btn-h2 { background: var(--h2-color); }
+#btn-h3 { background: var(--h3-color); }
+#sensor-panel.hidden-sensors .sensor-btn { display: none; }
+
+/* ── Practice guidance ── */
+#practice-guide {
+  display: none;
+  width: 100%; max-width: 540px;
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 14px 16px;
+}
+#practice-guide h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+.step-list { display: flex; flex-direction: column; gap: 6px; }
+.step-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 7px;
+  font-size: 0.88rem; transition: background 0.2s;
+}
+.step-item.active { background: rgba(121,134,203,0.2); font-weight: 700; color: var(--accent-light); }
+.step-item.done { color: var(--h1-color); text-decoration: line-through; opacity: 0.6; }
+.step-item.error { color: var(--h3-color); font-weight: 700; }
+.step-num { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; background: var(--border); flex-shrink: 0; }
+.step-item.active .step-num { background: var(--accent-light); color: #fff; }
+.step-item.done .step-num { background: var(--h1-color); color: #fff; }
+.step-item.error .step-num { background: var(--h3-color); color: #fff; }
+
+/* ── Timeline replay ── */
+#timeline-wrap {
+  display: none;
+  width: 100%; max-width: 540px;
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 14px 16px;
+}
+#timeline-wrap h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
+#timeline-bar {
+  position: relative; height: 6px;
+  background: var(--border); border-radius: 3px;
+  margin: 16px 0 28px;
+}
+.tl-dot {
+  position: absolute; top: 50%; transform: translate(-50%, -50%);
+  width: 14px; height: 14px; border-radius: 50%; cursor: pointer;
+}
+.tl-label {
+  position: absolute; top: 12px;
+  transform: translateX(-50%);
+  font-size: 0.7rem; white-space: nowrap; text-align: center;
+  color: var(--text-muted);
+}
+.tl-events { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.tl-event {
+  display: flex; gap: 10px; align-items: center;
+  font-size: 0.82rem; padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+.tl-event:last-child { border-bottom: none; }
+.tl-time { color: var(--text-muted); min-width: 40px; }
+.tl-type { font-weight: 700; }
+
+/* ── Upload result panel ── */
+#upload-panel {
+  display: none;
+  width: 100%; max-width: 540px;
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 16px;
+  text-align: center;
+}
+#upload-panel h3 { font-size: 1rem; margin-bottom: 12px; }
+#upload-panel input {
+  width: 100%; padding: 9px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 0.95rem; margin-bottom: 10px;
+}
+#upload-panel .btn-row { display: flex; gap: 8px; justify-content: center; }
+.btn-primary { background: var(--accent); color: #fff; padding: 9px 22px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; }
+.btn-secondary { background: var(--border); color: var(--text); padding: 9px 22px; border-radius: 8px; font-size: 0.9rem; }
+.btn-primary:hover { opacity: 0.88; }
+#upload-status { margin-top: 10px; font-size: 0.85rem; min-height: 1.2em; }
+
+/* ── Score summary ── */
+#score-summary {
+  display: none;
+  width: 100%; max-width: 540px;
+  display: none; /* shown after result */
+  background: var(--card); border-radius: var(--radius);
+  border: 1px solid var(--border); padding: 14px 16px;
+}
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.summary-card {
+  background: var(--bg); border-radius: 8px; padding: 12px;
+  text-align: center;
+}
+.summary-num { font-size: 2rem; font-weight: 900; color: var(--accent-light); }
+.summary-lbl { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+/* ── Teach overlay on practice ── */
+#practice-status-overlay {
+  position: absolute; top: 8%; left: 50%; transform: translateX(-50%);
+  font-size: clamp(2rem, 10vw, 4rem);
+  font-weight: 900; text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+  pointer-events: none; display: none;
+  animation: fadeOut 1.2s forwards;
+}
+@keyframes fadeOut { 0%{opacity:1;transform:translateX(-50%) scale(1)} 80%{opacity:1} 100%{opacity:0;transform:translateX(-50%) scale(1.1)} }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  #topbar { padding: 8px 12px; }
+  #sim-wrap { padding: 12px 10px 24px; gap: 12px; }
+  .sensor-btn { padding: 12px 6px; font-size: 0.85rem; }
+  .sensor-btn .s-icon { font-size: 1.3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Top bar -->
+<div id="topbar">
+  <a href="/">← 返回排行榜</a>
+  <h1>線上模擬器</h1>
+  <select id="diff-select">
+    <option value="EASY">簡單 (−10)</option>
+    <option value="NORMAL" selected>普通 (−15)</option>
+    <option value="HARD">困難 (−25)</option>
+  </select>
+</div>
+
+<!-- Simulator body -->
+<div id="sim-wrap">
+
+  <!-- TFT Screen -->
+  <div id="screen-area">
+    <img id="screen-img" src="/static/首頁.png" alt="模擬器螢幕">
+
+    <!-- Home screen clickable mode buttons (absolutely positioned) -->
+    <button class="screen-btn" id="hbtn-teach"  style="left:5%;  bottom:10%; width:27%; height:20%;" onclick="startMode('teach')"></button>
+    <button class="screen-btn" id="hbtn-practice" style="left:36%; bottom:10%; width:27%; height:20%;" onclick="startMode('practice')"></button>
+    <button class="screen-btn" id="hbtn-exam"   style="left:67%; bottom:10%; width:27%; height:20%;" onclick="startMode('exam')"></button>
+
+    <!-- Practice feedback overlay -->
+    <div id="practice-status-overlay"></div>
+
+    <!-- Exam overlays -->
+    <div id="overlay-exam">
+      <div class="exam-box" id="ov-deduct">--</div>
+      <div class="exam-box" id="ov-score">100</div>
+    </div>
+    <div id="overlay-result">
+      <div id="ov-total">--</div>
+      <div id="ov-survival">--</div>
+    </div>
+  </div>
+
+  <!-- Timer -->
+  <div id="timer-strip">⏱ 00:00</div>
+
+  <!-- Sensors -->
+  <div id="sensor-panel">
+    <button class="sensor-btn" id="btn-h1" onclick="triggerSensor('h1')">
+      <span class="s-icon">✓</span>
+      <span>H1 完成</span>
+      <span class="s-label">正常結束</span>
+    </button>
+    <button class="sensor-btn" id="btn-h2" onclick="triggerSensor('h2')">
+      <span class="s-icon">⚠️</span>
+      <span>H2 失誤</span>
+      <span class="s-label" id="h2-label">扣 15 分</span>
+    </button>
+    <button class="sensor-btn" id="btn-h3" onclick="triggerSensor('h3')">
+      <span class="s-icon">✗</span>
+      <span>H3 致命</span>
+      <span class="s-label">立即歸零</span>
+    </button>
+  </div>
+
+  <!-- Practice step guidance -->
+  <div id="practice-guide">
+    <h3>操作步驟引導</h3>
+    <!-- Current step display, centered inside the box -->
+    <div id="practice-current-step" style="
+      text-align:center; padding:14px 0 10px;
+      border-bottom:1px solid var(--border); margin-bottom:12px;">
+      <div id="practice-status-feedback" style="font-size:2rem;min-height:2.4rem;line-height:1;margin-bottom:6px;"></div>
+      <div id="practice-step-name" style="font-size:1.15rem;font-weight:800;color:var(--accent-light);"></div>
+      <div id="practice-step-desc" style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;"></div>
+      <div style="margin-top:8px;font-size:0.78rem;color:var(--text-muted);">H1 ✓ 完成步驟 &nbsp;|&nbsp; H2 ⚠️ 標記警告 &nbsp;|&nbsp; H3 ✗ 標記錯誤</div>
+    </div>
+    <div class="step-list" id="step-list"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn-secondary" onclick="endPractice()" style="padding:8px 28px;font-size:0.9rem;">結束練習</button>
+    </div>
+  </div>
+
+  <!-- Score summary (after exam) -->
+  <div id="score-summary">
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-num" id="sum-score">--</div>
+        <div class="summary-lbl">最終得分</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="sum-composite">--</div>
+        <div class="summary-lbl">綜合分</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="sum-survival">--</div>
+        <div class="summary-lbl">存活率</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-num" id="sum-time">--</div>
+        <div class="summary-lbl">用時</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline replay -->
+  <div id="timeline-wrap">
+    <h3>操作時間軸</h3>
+    <div id="timeline-bar"></div>
+    <div class="tl-events" id="tl-events"></div>
+  </div>
+
+  <!-- Upload panel -->
+  <div id="upload-panel">
+    <h3>上傳成績到排行榜</h3>
+    <input type="text" id="upload-name" placeholder="輸入你的名字" maxlength="20">
+    <div class="btn-row">
+      <button class="btn-primary" onclick="submitScore()">上傳</button>
+      <button class="btn-secondary" onclick="hideUpload()">略過</button>
+    </div>
+    <div id="upload-status"></div>
+  </div>
+
+</div><!-- /sim-wrap -->
+
+<script>
+// ============================================================
+// State
+// ============================================================
+const DIFF_DEDUCT = { EASY: 10, NORMAL: 15, HARD: 25 };
+const DIFF_WEIGHT = { EASY: 1.0, NORMAL: 1.2, HARD: 1.5 };
+const PRACTICE_STEPS = [
+  { num: 1, name: '固定', desc: '將雞置於保定臺，扣環固定雙翅與雙足' },
+  { num: 2, name: '切開', desc: '拔毛消毒，倒數一二肋骨間平行下刀' },
+  { num: 3, name: '擴張', desc: '置入擴張器撐開切口至勺子可進入大小' },
+  { num: 4, name: '尋找', desc: '撥開小腸等內臟，尋找睪丸' },
+  { num: 5, name: '破膜', desc: '撥開腸系膜並以刀尖破膜（防傷腎臟）' },
+  { num: 6, name: '摘除', desc: '套取法或勺套法摘除睪丸' },
+  { num: 7, name: '術後照護', desc: '移除擴張器，靜養，氣腫可放氣' },
+];
+
+let state = 'home'; // home | teach_welcome | teach_welcome2 | teach_slides | practice_welcome | practice_welcome2 | practice_main | exam_welcome | exam_welcome2 | exam_main | exam_result
+let teachSlide = 0;
+let examScore = 100;
+let examDifficulty = 'NORMAL';
+let examEvents = []; // { timeMs, sensor, deduct, scoreAfter }
+let examStartTime = 0;
+let examTimerInterval = null;
+let practiceStep = 0;
+let practiceStepStatus = []; // 'pending'|'ok'|'warn'|'error' per step
+let deductClearTimer = null;
+
+const TEACH_SLIDES = [
+  '/static/teach/TEACH_1.png',
+  '/static/teach/TEACH_2.png',
+  '/static/teach/TEACH_3.png',
+  '/static/teach/TEACH_4.png',
+  '/static/teach/TEACH_5.png',
+  '/static/teach/TEACH_6_1.png',
+  '/static/teach/TEACH_6_2.png',
+  '/static/teach/TEACH_7.png',
+  '/static/teach/TEACH_END.png',
+];
+
+// ============================================================
+// Screen image map
+// ============================================================
+const SCREEN = {
+  home:             '/static/首頁.png',
+  teach_welcome:    '/static/W_T.png',
+  teach_welcome2:   '/static/W_T2.png',
+  practice_welcome: '/static/W_P.png',
+  practice_welcome2:'/static/W_P2.png',
+  exam_welcome:     '/static/W_TE.png',
+  exam_welcome2:    '/static/W_TE2.png',
+  practice_main:    '/static/PR.png',
+  exam_main:        '/static/NSE.png',
+  exam_result:      '/static/NSE (2).png',
+  error:            '/static/ERROR.png',
+};
+
+// ============================================================
+// UI helpers
+// ============================================================
+function setScreen(key, src) {
+  document.getElementById('screen-img').src = src || SCREEN[key] || SCREEN.error;
+}
+const _SHOW_AS = { 'sensor-panel':'flex' };
+function show(id) { const el = document.getElementById(id); if(el) el.style.display = _SHOW_AS[id] || 'block'; }
+function hide(id) { const el = document.getElementById(id); if(el) el.style.display = 'none'; }
+function fmtTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+function survivalRate(score) {
+  if (score >= 80) return 85 + Math.floor(Math.random() * 15); // 85–99
+  if (score >= 60) return 66 + Math.floor(Math.random() * 18); // 66–83
+  if (score >= 40) return 46 + Math.floor(Math.random() * 10); // 46–55
+  return 11 + Math.floor(Math.random() * 20);                   // 11–30
+}
+function colorForScore(s) {
+  if (s >= 80) return '#43a047';
+  if (s >= 60) return '#f9a825';
+  if (s >= 40) return '#ef6c00';
+  return '#e53935';
+}
+
+// ============================================================
+// Home screen overlay buttons visibility
+// ============================================================
+function setHomeBtnsVisible(v) {
+  ['hbtn-teach','hbtn-practice','hbtn-exam'].forEach(id => {
+    document.getElementById(id).style.display = v ? '' : 'none';
+  });
+}
+
+// ============================================================
+// Mode selection
+// ============================================================
+function startMode(mode) {
+  if (state !== 'home') return;
+  if (mode === 'teach') goState('teach_welcome');
+  else if (mode === 'practice') goState('practice_welcome');
+  else if (mode === 'exam') goState('exam_welcome');
+}
+
+// ============================================================
+// State machine
+// ============================================================
+function goState(newState) {
+  state = newState;
+  resetOverlays();
+
+  // Default: hide sensors and guides
+  hide('sensor-panel'); hide('practice-guide'); hide('timer-strip');
+  hide('overlay-exam'); hide('overlay-result');
+  hide('score-summary'); hide('timeline-wrap'); hide('upload-panel');
+  setHomeBtnsVisible(false);
+
+  // Clear exam timer
+  if (examTimerInterval && newState !== 'exam_main') {
+    clearInterval(examTimerInterval);
+    examTimerInterval = null;
+  }
+
+  switch (newState) {
+    case 'home':
+      setScreen('home');
+      setHomeBtnsVisible(true);
+      break;
+
+    case 'teach_welcome':
+      setScreen('teach_welcome');
+      // Clickable: 切換模式 → home, 繼續 → teach_welcome2
+      setupWelcomeBtns(() => goState('home'), () => goState('teach_welcome2'));
+      break;
+    case 'teach_welcome2':
+      setScreen('teach_welcome2');
+      setupWelcomeBtns(() => goState('home'), () => { teachSlide = 0; goState('teach_slides'); });
+      break;
+    case 'teach_slides':
+      setScreen(null, TEACH_SLIDES[teachSlide]);
+      setupTeachNavBtns();
+      break;
+
+    case 'practice_welcome':
+      setScreen('practice_welcome');
+      setupWelcomeBtns(() => goState('home'), () => goState('practice_welcome2'));
+      break;
+    case 'practice_welcome2':
+      setScreen('practice_welcome2');
+      setupWelcomeBtns(() => goState('home'), () => startPractice());
+      break;
+    case 'practice_main':
+      setScreen('practice_main');
+      show('sensor-panel'); show('practice-guide');
+      renderPracticeGuide();
+      break;
+
+    case 'exam_welcome':
+      setScreen('exam_welcome');
+      setupWelcomeBtns(() => goState('home'), () => goState('exam_welcome2'));
+      break;
+    case 'exam_welcome2':
+      setScreen('exam_welcome2');
+      setupWelcomeBtns(() => goState('home'), () => startExam());
+      break;
+    case 'exam_main':
+      setScreen('exam_main');
+      show('sensor-panel'); show('timer-strip');
+      show('overlay-exam');
+      document.getElementById('ov-deduct').textContent = '--';
+      document.getElementById('ov-deduct').style.color = '#ef5350';
+      document.getElementById('ov-score').textContent = '100';
+      document.getElementById('ov-score').style.color = colorForScore(100);
+      startTimer();
+      updateH2Label();
+      break;
+    case 'exam_result':
+      showExamResult();
+      break;
+  }
+}
+
+// ============================================================
+// Welcome screen nav buttons
+// ============================================================
+let _wBtnCleanup = null;
+function setupWelcomeBtns(onSwitch, onContinue) {
+  if (_wBtnCleanup) _wBtnCleanup();
+  // Left ~30% width, bottom ~18% height = 切換模式
+  // Right ~30% width, bottom ~18% height = 繼續/開始
+  const switchBtn = makeOverlayBtn('w-switch', '5%', null, '27%', '18%', onSwitch);
+  const contBtn   = makeOverlayBtn('w-cont',  null, '5%', '27%', '18%', onContinue);
+  document.getElementById('screen-area').append(switchBtn, contBtn);
+  _wBtnCleanup = () => { switchBtn.remove(); contBtn.remove(); };
+}
+function setupTeachNavBtns() {
+  if (_wBtnCleanup) _wBtnCleanup();
+  const isFirst = teachSlide === 0;
+  const isLast  = teachSlide === TEACH_SLIDES.length - 1;
+
+  if (!isLast) {
+    const prevBtn = isFirst ? null : makeOverlayBtn('t-prev', '5%', null, '27%', '18%', () => { teachSlide--; goState('teach_slides'); });
+    const nextBtn = makeOverlayBtn('t-next', null, '5%', '27%', '18%', () => {
+      if (teachSlide < TEACH_SLIDES.length - 1) { teachSlide++; goState('teach_slides'); }
+    });
+    const btns = [prevBtn, nextBtn].filter(Boolean);
+    btns.forEach(b => document.getElementById('screen-area').appendChild(b));
+    _wBtnCleanup = () => btns.forEach(b => b.remove());
+  } else {
+    // Last slide (TEND): tap anywhere → home
+    const endBtn = makeOverlayBtn('t-end', '0', null, '100%', '100%', () => goState('home'));
+    endBtn.style.left = '0'; endBtn.style.top = '0';
+    document.getElementById('screen-area').appendChild(endBtn);
+    _wBtnCleanup = () => endBtn.remove();
+  }
+}
+function makeOverlayBtn(id, left, right, w, h, fn) {
+  const b = document.createElement('button');
+  b.id = id; b.className = 'screen-btn';
+  b.style.width = w; b.style.height = h; b.style.bottom = '8%';
+  if (left !== null) b.style.left = left;
+  if (right !== null) b.style.right = right;
+  b.onclick = fn;
+  return b;
+}
+
+// ============================================================
+// Practice mode
+// ============================================================
+function startPractice() {
+  practiceStep = 0;
+  practiceStepStatus = PRACTICE_STEPS.map(() => 'pending');
+  goState('practice_main');
+}
+function renderPracticeGuide() {
+  const list = document.getElementById('step-list');
+  list.innerHTML = PRACTICE_STEPS.map((s, i) => {
+    const st = practiceStepStatus[i];
+    const cls = i === practiceStep ? 'active' : st === 'ok' ? 'done' : st === 'error' ? 'error' : '';
+    const icon = st === 'ok' ? '✓' : st === 'error' ? '✗' : st === 'warn' ? '⚠' : i+1;
+    return `<div class="step-item ${cls}">
+      <span class="step-num">${icon}</span>
+      <span><strong>${s.name}</strong> — ${s.desc}</span>
+    </div>`;
+  }).join('');
+  // Update centered current-step display
+  const done = practiceStep >= PRACTICE_STEPS.length;
+  const s = done ? null : PRACTICE_STEPS[practiceStep];
+  const nameEl = document.getElementById('practice-step-name');
+  const descEl = document.getElementById('practice-step-desc');
+  if (nameEl) nameEl.textContent = done ? '✅ 全部完成！' : `步驟 ${practiceStep + 1} / ${PRACTICE_STEPS.length}：${s.name}`;
+  if (descEl) descEl.textContent = done ? '' : s.desc;
+}
+function endPractice() {
+  goState('home');
+}
+function showPracticeOverlay(emoji, color) {
+  // Show on screen overlay (existing)
+  const ov = document.getElementById('practice-status-overlay');
+  if (ov) {
+    ov.textContent = emoji; ov.style.color = color;
+    ov.style.display = 'block';
+    ov.style.animation = 'none';
+    void ov.offsetWidth; // reflow
+    ov.style.animation = 'fadeOut 1.2s forwards';
+    setTimeout(() => ov.style.display = 'none', 1200);
+  }
+  // Also flash inside the guide box
+  const fb = document.getElementById('practice-status-feedback');
+  if (fb) {
+    fb.textContent = emoji; fb.style.color = color;
+    clearTimeout(fb._t);
+    fb._t = setTimeout(() => { fb.textContent = ''; }, 1500);
+  }
+}
+
+// ============================================================
+// Exam mode
+// ============================================================
+function startExam() {
+  examDifficulty = document.getElementById('diff-select').value;
+  examScore = 100; examEvents = [];
+  examStartTime = Date.now();
+  goState('exam_main');
+}
+function startTimer() {
+  if (examTimerInterval) clearInterval(examTimerInterval);
+  examTimerInterval = setInterval(() => {
+    const el = document.getElementById('timer-strip');
+    if (el) el.textContent = '⏱ ' + fmtTime(Date.now() - examStartTime);
+  }, 500);
+}
+function updateH2Label() {
+  const d = document.getElementById('diff-select').value;
+  document.getElementById('h2-label').textContent = `扣 ${DIFF_DEDUCT[d]} 分`;
+}
+
+// ============================================================
+// Sensor triggers
+// ============================================================
+function triggerSensor(sensor) {
+  if (state === 'practice_main') {
+    handlePracticeSensor(sensor);
+    return;
+  }
+  if (state !== 'exam_main') return;
+  handleExamSensor(sensor);
+}
+
+function handlePracticeSensor(sensor) {
+  if (sensor === 'h1') {
+    // correct step
+    if (practiceStep < PRACTICE_STEPS.length) {
+      practiceStepStatus[practiceStep] = 'ok';
+      showPracticeOverlay('✓', '#43a047');
+      practiceStep++;
+      if (practiceStep >= PRACTICE_STEPS.length) {
+        // all done
+        setTimeout(() => goState('home'), 1000);
+        return;
+      }
+    }
+  } else if (sensor === 'h2') {
+    practiceStepStatus[practiceStep] = 'warn';
+    showPracticeOverlay('⚠️', '#f9a825');
+  } else if (sensor === 'h3') {
+    practiceStepStatus[practiceStep] = 'error';
+    showPracticeOverlay('✗', '#e53935');
+  }
+  renderPracticeGuide();
+}
+
+function handleExamSensor(sensor) {
+  const now = Date.now() - examStartTime;
+  if (sensor === 'h3') {
+    examEvents.push({ timeMs: now, sensor: 'H3', deduct: examScore, scoreAfter: 0 });
+    examScore = 0;
+    clearInterval(examTimerInterval);
+    goState('exam_result');
+    return;
+  }
+  if (sensor === 'h2') {
+    const diff = document.getElementById('diff-select').value;
+    const deductAmt = DIFF_DEDUCT[diff];
+    const actual = Math.min(deductAmt, examScore);
+    if (actual <= 0) return;
+    examScore -= actual;
+    examEvents.push({ timeMs: now, sensor: 'H2', deduct: actual, scoreAfter: examScore });
+
+    const deductEl = document.getElementById('ov-deduct');
+    const scoreEl  = document.getElementById('ov-score');
+    deductEl.textContent = `-${actual}`;
+    deductEl.style.color = '#ef5350';
+    scoreEl.textContent = examScore;
+    scoreEl.style.color = colorForScore(examScore);
+
+    if (deductClearTimer) clearTimeout(deductClearTimer);
+    deductClearTimer = setTimeout(() => { deductEl.textContent = '--'; }, 3000);
+
+    if (examScore <= 0) {
+      clearInterval(examTimerInterval);
+      setTimeout(() => goState('exam_result'), 600);
+    }
+    return;
+  }
+  if (sensor === 'h1') {
+    const dur = Date.now() - examStartTime;
+    examEvents.push({ timeMs: dur, sensor: 'H1', deduct: 0, scoreAfter: examScore });
+    clearInterval(examTimerInterval);
+    goState('exam_result');
+  }
+}
+
+// ============================================================
+// Exam result
+// ============================================================
+function showExamResult() {
+  setScreen('exam_result');
+  hide('sensor-panel'); hide('timer-strip'); hide('practice-guide');
+  hide('overlay-exam');
+
+  const dur = examEvents.length ? examEvents[examEvents.length-1].timeMs : 0;
+  const sr = survivalRate(examScore);
+  const diff = document.getElementById('diff-select').value;
+  const composite = Math.round(examScore * DIFF_WEIGHT[diff]);
+
+  // Result overlays
+  show('overlay-result');
+  const totalEl = document.getElementById('ov-total');
+  const survEl  = document.getElementById('ov-survival');
+  totalEl.textContent = examScore;
+  totalEl.style.color = colorForScore(examScore);
+  survEl.textContent = sr;
+  survEl.style.color = colorForScore(examScore);
+
+  // Score summary cards
+  const ss = document.getElementById('score-summary');
+  ss.style.display = 'block';
+  document.getElementById('sum-score').textContent = examScore;
+  document.getElementById('sum-score').style.color = colorForScore(examScore);
+  document.getElementById('sum-composite').textContent = composite;
+  document.getElementById('sum-survival').textContent = sr + '%';
+  document.getElementById('sum-time').textContent = fmtTime(dur);
+
+  // Timeline
+  renderTimeline(dur);
+
+  // Upload panel
+  const up = document.getElementById('upload-panel');
+  up.style.display = 'block';
+  document.getElementById('upload-name').value = '';
+  document.getElementById('upload-status').textContent = '';
+
+  // Store for upload
+  up._sr = sr; up._dur = Math.round(dur/1000); up._diff = diff;
+
+  // Return home button: tap screen → home (after 1s delay)
+  setTimeout(() => {
+    const sa = document.getElementById('screen-area');
+    const rBtn = document.createElement('button');
+    rBtn.className = 'screen-btn'; rBtn.id = 'result-home-btn';
+    rBtn.style.cssText = 'right:5%;bottom:8%;width:30%;height:18%;';
+    rBtn.onclick = () => { rBtn.remove(); goState('home'); };
+    sa.appendChild(rBtn);
+  }, 800);
+}
+
+// ============================================================
+// Timeline render
+// ============================================================
+function renderTimeline(totalMs) {
+  const wrap = document.getElementById('timeline-wrap');
+  wrap.style.display = 'block';
+
+  const bar = document.getElementById('timeline-bar');
+  const evList = document.getElementById('tl-events');
+  bar.innerHTML = '';
+
+  // Events
+  evList.innerHTML = examEvents.map(ev => {
+    const color = ev.sensor === 'H1' ? '#43a047' : ev.sensor === 'H2' ? '#f9a825' : '#e53935';
+    const label = ev.sensor === 'H1' ? '✓ 正常結束' : ev.sensor === 'H2' ? `⚠ 扣 ${ev.deduct} 分 → ${ev.scoreAfter}` : `✗ 致命歸零`;
+    return `<div class="tl-event">
+      <span class="tl-time">${fmtTime(ev.timeMs)}</span>
+      <span class="tl-type" style="color:${color}">${ev.sensor}</span>
+      <span>${label}</span>
+    </div>`;
+  }).join('');
+
+  // Bar dots
+  if (totalMs > 0) {
+    examEvents.forEach(ev => {
+      const pct = Math.min(99, (ev.timeMs / totalMs) * 100);
+      const color = ev.sensor === 'H1' ? '#43a047' : ev.sensor === 'H2' ? '#f9a825' : '#e53935';
+      const dot = document.createElement('div');
+      dot.className = 'tl-dot';
+      dot.style.left = pct + '%';
+      dot.style.background = color;
+      const lbl = document.createElement('div');
+      lbl.className = 'tl-label';
+      lbl.style.left = pct + '%';
+      lbl.textContent = fmtTime(ev.timeMs);
+      lbl.style.color = color;
+      bar.appendChild(dot);
+      bar.appendChild(lbl);
+    });
+  }
+}
+
+// ============================================================
+// Score upload
+// ============================================================
+async function submitScore() {
+  const name = document.getElementById('upload-name').value.trim();
+  const statusEl = document.getElementById('upload-status');
+  if (!name) { statusEl.textContent = '請輸入名字'; statusEl.style.color = '#ef5350'; return; }
+  const up = document.getElementById('upload-panel');
+  const body = {
+    device_key: 'CHICKEN_SECRET_2026',
+    name,
+    score: examScore,
+    survival: up._sr,
+    duration: up._dur,
+    difficulty: up._diff,
+    device_id: 'simulator',
+  };
+  statusEl.textContent = '上傳中…'; statusEl.style.color = 'var(--text-muted)';
+  try {
+    const res = await fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      statusEl.textContent = `✓ 上傳成功！排名第 ${data.rank ?? '?'} 名`;
+      statusEl.style.color = '#43a047';
+      document.getElementById('upload-panel').querySelector('.btn-row').innerHTML =
+        '<a href="/" class="btn-primary" style="text-align:center;">查看排行榜</a>';
+    } else {
+      statusEl.textContent = '上傳失敗：' + (data.error || '未知錯誤');
+      statusEl.style.color = '#ef5350';
+    }
+  } catch(e) {
+    statusEl.textContent = '網路錯誤，請稍後再試';
+    statusEl.style.color = '#ef5350';
+  }
+}
+function hideUpload() {
+  hide('upload-panel');
+}
+
+// ============================================================
+// Reset overlays
+// ============================================================
+function resetOverlays() {
+  if (_wBtnCleanup) { _wBtnCleanup(); _wBtnCleanup = null; }
+  const rb = document.getElementById('result-home-btn');
+  if (rb) rb.remove();
+  if (deductClearTimer) { clearTimeout(deductClearTimer); deductClearTimer = null; }
+}
+
+// ============================================================
+// Difficulty change
+// ============================================================
+document.getElementById('diff-select').addEventListener('change', () => {
+  updateH2Label();
+  examDifficulty = document.getElementById('diff-select').value;
+});
+
+// ============================================================
+// Init
+// ============================================================
+setHomeBtnsVisible(true);
+document.getElementById('sensor-panel').style.display = 'none';
+
+// Touch swipe on teach slides
+let _tsX = 0;
+document.getElementById('screen-area').addEventListener('touchstart', e => { _tsX = e.touches[0].clientX; }, { passive: true });
+document.getElementById('screen-area').addEventListener('touchend', e => {
+  if (state !== 'teach_slides') return;
+  const dx = e.changedTouches[0].clientX - _tsX;
+  if (Math.abs(dx) > 40) {
+    if (dx < 0 && teachSlide < TEACH_SLIDES.length - 1) { teachSlide++; goState('teach_slides'); }
+    else if (dx > 0 && teachSlide > 0) { teachSlide--; goState('teach_slides'); }
+  }
+}, { passive: true });
+</script>
+</body>
+</html>

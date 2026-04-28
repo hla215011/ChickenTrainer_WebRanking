@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>關於我們 — 智能閹雞模型</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --text-muted: #6e6e73;
+    --border: #d2d2d7;
+    --accent: #0071e3;
+    --accent-hover: #0068d0;
+    --radius: 18px;
+  }
+  body.dark {
+    --bg: #1c1c1e; --surface: #2c2c2e; --text: #f5f5f7;
+    --text-muted: #98989d; --border: rgba(255,255,255,0.1); --accent: #3b9eff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'PingFang TC', 'Helvetica Neue', sans-serif;
+    background: var(--bg); color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Hero */
+  .hero {
+    background: #1d1d1f;
+    color: #f5f5f7;
+    text-align: center;
+    padding: 80px 24px 72px;
+  }
+  .hero-eyebrow {
+    font-size: 0.76rem; font-weight: 600; letter-spacing: .1em;
+    color: rgba(245,245,247,0.5); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 700;
+    letter-spacing: -.04em; line-height: 1.1; margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: #60a5fa; }
+  .hero-sub {
+    font-size: 1.05rem; color: rgba(245,245,247,0.65);
+    max-width: 520px; margin: 0 auto; line-height: 1.75;
+  }
+
+  /* Wrap */
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px; }
+  .sec-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 20px; }
+  .sec-eyebrow { font-size: 0.72rem; font-weight: 600; letter-spacing: .1em; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; }
+  .divider { height: 1px; background: var(--border); max-width: 760px; margin: 0 auto; }
+
+  /* Story block */
+  .story-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px; padding: 36px 32px; line-height: 1.85; color: var(--text-muted);
+    font-size: 0.92rem;
+  }
+  .story-block p + p { margin-top: 14px; }
+  .story-block strong { color: var(--text); }
+
+  /* Timeline */
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl-item {
+    display: flex; gap: 20px; align-items: flex-start;
+    padding: 20px 0; border-bottom: 1px solid var(--border);
+  }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-year {
+    font-size: 0.82rem; font-weight: 700; color: var(--accent);
+    min-width: 60px; padding-top: 2px; letter-spacing: .02em;
+  }
+  .tl-content .tl-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 4px; }
+  .tl-content .tl-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Value cards */
+  .value-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 16px; }
+  .value-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 22px;
+  }
+  .value-card .v-icon { font-size: 2rem; margin-bottom: 14px; }
+  .value-card .v-title { font-size: 1rem; font-weight: 700; letter-spacing: -.01em; margin-bottom: 8px; }
+  .value-card .v-sub { font-size: 0.78rem; color: var(--accent); font-weight: 600; margin-bottom: 8px; }
+  .value-card .v-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Team */
+  .team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 16px; }
+  .team-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 20px; text-align: center;
+  }
+  .team-avatar {
+    width: 60px; height: 60px; border-radius: 50%; background: var(--bg);
+    margin: 0 auto 14px; display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; border: 1px solid var(--border);
+  }
+  .team-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .team-role { font-size: 0.78rem; color: var(--text-muted); }
+
+  /* Quote */
+  .quote-block {
+    background: var(--accent); color: #fff;
+    border-radius: 18px; padding: 40px 36px; text-align: center;
+  }
+  .quote-text { font-size: clamp(1.1rem, 2.5vw, 1.45rem); font-weight: 700; letter-spacing: -.02em; line-height: 1.5; margin-bottom: 14px; }
+  .quote-attr { font-size: 0.82rem; opacity: 0.75; }
+
+  /* CTA */
+  .cta { background: #1d1d1f; color: #f5f5f7; text-align: center; padding: 64px 24px; }
+  .cta h3 { font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 700; letter-spacing: -.02em; margin-bottom: 12px; }
+  .cta p { color: rgba(245,245,247,0.6); margin-bottom: 28px; font-size: 0.92rem; line-height: 1.65; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-outline { display: inline-block; border: 1px solid rgba(255,255,255,0.25); border-radius: 980px; padding: 11px 28px; font-size: 0.92rem; font-weight: 500; color: #f5f5f7; text-decoration: none; transition: background 0.15s; }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .btn-primary { display: inline-block; background: var(--accent); color: #fff; border-radius: 980px; padding: 11px 28px; font-size: 0.92rem; font-weight: 500; text-decoration: none; border: 1px solid transparent; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* Footer */
+  footer { background: var(--bg); border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+  footer a { color: var(--text-muted); text-decoration: none; margin: 0 10px; }
+  footer a:hover { color: var(--text); }
+  .footer-links { margin-top: 8px; }
+  .footer-disc-btn { margin-top: 12px; background: transparent; border: 1px solid var(--border); border-radius: 980px; color: var(--text-muted); font-size: 0.75rem; padding: 4px 14px; cursor: pointer; font-family: inherit; }
+  .footer-disc-btn:hover { color: var(--text); border-color: #aaa; }
+  .disc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 24px; }
+  .disc-overlay.hidden { display: none; }
+  .disc-box { background: var(--surface); border-radius: 18px; padding: 32px; max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
+  .disc-close { position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.06); border: none; border-radius: 980px; width: 28px; height: 28px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+<script src="/static/shared-header.js"></script>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-eyebrow">ABOUT US</div>
+  <h1>以<em>科技</em>取代<em>犧牲</em></h1>
+  <p class="hero-sub">我們相信，每一項傳統技術都值得被數位化保存，讓知識得以傳承，讓練習得以累積。</p>
+</div>
+
+<!-- 品牌故事 -->
+<div class="wrap">
+  <div class="sec-eyebrow">BRAND STORY</div>
+  <div class="sec-title">品牌故事</div>
+  <div class="story-block">
+    <p>閹雞技術是台灣傳統農業中不可或缺的一環，但這門手藝的傳承始終面臨困境——<strong>傳統學習方式不僅需要犧牲大量生命，更讓許多有意從事此業的年輕人望之卻步</strong>。</p>
+    <p>2024 年，我們的創辦人在一次農業技術交流中，親眼見到老師傅一刀一刀地示範，看著台下學員因緊張而顫抖的雙手，心裡萌生了一個念頭：<strong>這件事，應該有更好的學習方式</strong>。</p>
+    <p>歷經兩年的研發，反覆測試感應器的精準度、介面的直觀性，以及評分系統的合理性，智能閹雞模型終於問世。我們的目標不是取代傳統，而是讓<strong>每一位學習者在真正上手之前，已經有了足夠的練習基礎</strong>。</p>
+    <p>閹，是一門技藝。我們讓它可以被練習、被評分、被超越。</p>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 核心理念 -->
+<div class="wrap">
+  <div class="sec-eyebrow">CORE VALUES</div>
+  <div class="sec-title">核心理念</div>
+  <div class="value-grid">
+    <div class="value-card">
+      <div class="v-icon">🔁</div>
+      <div class="v-title">Reduce</div>
+      <div class="v-sub">減少犧牲</div>
+      <div class="v-desc">模擬訓練取代實體練習，讓生命不再是學習的代價，降低不必要的損失。</div>
+    </div>
+    <div class="value-card">
+      <div class="v-icon">📈</div>
+      <div class="v-title">Refine</div>
+      <div class="v-sub">精進技藝</div>
+      <div class="v-desc">即時回饋與評分機制，幫助學習者精準定位問題，加速技術成長曲線。</div>
+    </div>
+    <div class="value-card">
+      <div class="v-icon">🌱</div>
+      <div class="v-title">Revive</div>
+      <div class="v-sub">傳承技術</div>
+      <div class="v-desc">將老師傅的知識數位化，讓傳統農業技術不因師資短缺而斷代失傳。</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 發展歷程 -->
+<div class="wrap">
+  <div class="sec-eyebrow">TIMELINE</div>
+  <div class="sec-title">發展歷程</div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-year">2024 Q1</div>
+      <div class="tl-content">
+        <div class="tl-title">概念發想</div>
+        <div class="tl-desc">創辦人於農業技術交流活動中，觀察到傳統閹雞學習困境，決定著手開發模擬解決方案。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2024 Q3</div>
+      <div class="tl-content">
+        <div class="tl-title">感應器原型</div>
+        <div class="tl-desc">完成第一代感應器原型，與農業技術顧問合作，確立力道偵測閾值與評分邏輯。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2025 Q1</div>
+      <div class="tl-content">
+        <div class="tl-title">Beta 測試</div>
+        <div class="tl-desc">邀請農業學校學生與現役師傅進行封閉測試，根據回饋大幅調整介面與評分細節。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2025 Q4</div>
+      <div class="tl-content">
+        <div class="tl-title">雲端排行榜上線</div>
+        <div class="tl-desc">推出 WiFi 同步與雲端排行榜系統，支援多台競賽模式，正式投入教學機構試用。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-year">2026</div>
+      <div class="tl-content">
+        <div class="tl-title">正式上市準備中</div>
+        <div class="tl-desc">完成量產設計與品質驗證，預計正式開放購買，持續拓展台灣各縣市農業推廣合作。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 引言 -->
+<div class="wrap">
+  <div class="quote-block">
+    <div class="quote-text">「閹雞不只是一門手藝，<br>它是幾十年農村智慧的結晶。<br>我們只是讓它可以被反覆練習。」</div>
+    <div class="quote-attr">— 智能閹雞模型 創辦團隊</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h3>想更了解我們？</h3>
+  <p>歡迎查閱常見問題、聯繫支援服務，或直接前往首頁體驗排行榜系統。</p>
+  <div class="cta-btns">
+    <a href="/support" class="btn-outline">聯繫我們</a>
+    <a href="/" class="btn-primary">返回首頁</a>
+  </div>
+</div>
+
+<footer>
+  <div>© 2026 智能閹雞模型</div>
+  <div class="footer-links">
+    <a href="/">首頁</a>
+    <a href="/buy">購買模擬器</a>
+    <a href="/faq">常見問題</a>
+    <a href="/support">支援服務</a>
+  </div>
+  <button onclick="document.getElementById('disclaimer-modal').classList.remove('hidden')" class="footer-disc-btn">免責聲明與安全注意事項</button>
+</footer>
+
+<div id="disclaimer-modal" class="disc-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="disc-box">
+    <button class="disc-close" onclick="document.getElementById('disclaimer-modal').classList.add('hidden')">✕</button>
+    <h2 style="margin-bottom:16px;font-size:1.1rem;">免責聲明與安全注意事項</h2>
+    <div style="font-size:0.86rem;line-height:1.8;color:var(--text);">
+      <p style="margin-bottom:12px;"><strong>1. 僅供教育訓練用途</strong><br>本模擬器及網站所有功能，僅供畜牧業相關人員之教育訓練及技術練習使用，不得用於任何商業手術服務。</p>
+      <p style="margin-bottom:12px;"><strong>2. 不替代專業訓練</strong><br>本系統為輔助學習工具，無法完全複製真實手術情境。實際操作前，請務必接受合格獸醫師或畜牧專家的專業指導。</p>
+      <p style="margin-bottom:12px;"><strong>3. 動物福利聲明</strong><br>本系統設計理念在於「以科技取代犧牲」，使用模型替代真實動物進行練習，符合 3R 原則（替代、減少、改良）。</p>
+      <p style="margin-bottom:12px;"><strong>4. 成績資料聲明</strong><br>排行榜成績為訓練紀錄，僅供參考，不代表實際手術能力。存活率等指標為模擬數值，與真實手術結果無關。</p>
+      <p style="margin-bottom:0;"><strong>5. 責任限制</strong><br>本系統開發者對因使用本系統資訊而產生的任何直接或間接損失，不承擔法律責任。使用者應自行評估風險並承擔相應責任。</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

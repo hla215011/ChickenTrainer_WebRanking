@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: chicken-trainer-server
+    env: python
+    region: singapore  # 距離台灣最近的免費區
+    plan: free
+    buildCommand: ""
+    startCommand: python server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0

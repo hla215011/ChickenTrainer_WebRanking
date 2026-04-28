@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>支援服務 — 智能閹雞模型</title>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --surface: #ffffff;
+    --text: #1d1d1f;
+    --text-muted: #6e6e73;
+    --border: #d2d2d7;
+    --accent: #0071e3;
+    --accent-hover: #0068d0;
+    --radius: 18px;
+    --green: #34c759;
+    --orange: #ff9500;
+    --red: #ff3b30;
+  }
+  body.dark {
+    --bg: #1c1c1e; --surface: #2c2c2e; --text: #f5f5f7;
+    --text-muted: #98989d; --border: rgba(255,255,255,0.1); --accent: #3b9eff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, 'PingFang TC', 'Helvetica Neue', sans-serif;
+    background: var(--bg); color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Hero */
+  .hero {
+    background: var(--surface);
+    text-align: center;
+    padding: 64px 24px 56px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero-eyebrow {
+    font-size: 0.76rem; font-weight: 600; letter-spacing: .1em;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 14px;
+  }
+  .hero h1 {
+    font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700;
+    letter-spacing: -.03em; line-height: 1.1; margin-bottom: 16px;
+  }
+  .hero-sub {
+    font-size: 1rem; color: var(--text-muted);
+    max-width: 480px; margin: 0 auto; line-height: 1.7;
+  }
+
+  /* Wrap */
+  .wrap { max-width: 760px; margin: 0 auto; padding: 56px 24px; }
+  .sec-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -.02em; margin-bottom: 20px; }
+  .divider { height: 1px; background: var(--border); max-width: 760px; margin: 0 auto; }
+
+  /* Cards */
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 0; }
+  .info-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 20px;
+  }
+  .info-card .card-icon { font-size: 1.8rem; margin-bottom: 12px; }
+  .info-card .card-title { font-size: 0.92rem; font-weight: 700; margin-bottom: 6px; }
+  .info-card .card-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Step list */
+  .step-list { display: flex; flex-direction: column; gap: 2px; }
+  .step-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    display: flex; gap: 16px; align-items: flex-start;
+  }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--accent);
+    color: #fff; font-size: 0.8rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .step-content .step-title { font-size: 0.92rem; font-weight: 600; margin-bottom: 4px; }
+  .step-content .step-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; }
+
+  /* Policy table */
+  .policy-table { width: 100%; border-collapse: collapse; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); background: var(--surface); }
+  .policy-table th {
+    background: var(--bg); font-size: 0.78rem; font-weight: 600;
+    padding: 12px 16px; text-align: left; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
+  }
+  .policy-table td { padding: 14px 16px; font-size: 0.85rem; line-height: 1.6; border-top: 1px solid var(--border); vertical-align: top; }
+  .policy-table tr:first-child td { border-top: none; }
+  .badge {
+    display: inline-block; font-size: 0.72rem; font-weight: 600; padding: 2px 9px;
+    border-radius: 980px; margin-right: 4px;
+  }
+  .badge-green { background: rgba(52,199,89,0.12); color: var(--green); }
+  .badge-red { background: rgba(255,59,48,0.12); color: var(--red); }
+
+  /* Contact form style cards */
+  .contact-methods { display: flex; flex-direction: column; gap: 2px; }
+  .contact-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .contact-left .c-label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 3px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+  .contact-left .c-value { font-size: 0.9rem; font-weight: 600; }
+  .contact-left .c-hint { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+  .contact-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+  /* CTA */
+  .cta { background: #1d1d1f; color: #f5f5f7; text-align: center; padding: 64px 24px; }
+  .cta h3 { font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 700; letter-spacing: -.02em; margin-bottom: 12px; }
+  .cta p { color: rgba(245,245,247,0.6); margin-bottom: 28px; font-size: 0.92rem; line-height: 1.65; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .cta-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn-outline { display: inline-block; border: 1px solid rgba(255,255,255,0.25); border-radius: 980px; padding: 11px 28px; font-size: 0.92rem; font-weight: 500; color: #f5f5f7; text-decoration: none; transition: background 0.15s; }
+  .btn-outline:hover { background: rgba(255,255,255,0.1); }
+  .btn-primary { display: inline-block; background: var(--accent); color: #fff; border-radius: 980px; padding: 11px 28px; font-size: 0.92rem; font-weight: 500; text-decoration: none; border: 1px solid transparent; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--accent-hover); }
+
+  /* Footer */
+  footer { background: var(--bg); border-top: 1px solid var(--border); padding: 24px; text-align: center; font-size: 0.78rem; color: var(--text-muted); }
+  footer a { color: var(--text-muted); text-decoration: none; margin: 0 10px; }
+  footer a:hover { color: var(--text); }
+  .footer-links { margin-top: 8px; }
+  .footer-disc-btn { margin-top: 12px; background: transparent; border: 1px solid var(--border); border-radius: 980px; color: var(--text-muted); font-size: 0.75rem; padding: 4px 14px; cursor: pointer; font-family: inherit; }
+  .footer-disc-btn:hover { color: var(--text); border-color: #aaa; }
+  .disc-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 999; padding: 24px; }
+  .disc-overlay.hidden { display: none; }
+  .disc-box { background: var(--surface); border-radius: 18px; padding: 32px; max-width: 520px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; }
+  .disc-close { position: absolute; top: 16px; right: 16px; background: rgba(0,0,0,0.06); border: none; border-radius: 980px; width: 28px; height: 28px; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  /* Form */
+  .support-form { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+  .form-row { margin-bottom: 18px; }
+  .form-row label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 7px; }
+  .form-row input, .form-row select, .form-row textarea {
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border);
+    border-radius: 10px; font-size: 0.88rem; font-family: inherit;
+    color: var(--text); background: var(--bg); outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--accent); background: var(--surface); }
+  .form-row textarea { resize: vertical; min-height: 100px; }
+  .form-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; }
+  .form-submit { display: inline-block; background: var(--accent); color: #fff; border-radius: 980px; padding: 11px 36px; font-size: 0.92rem; font-weight: 500; border: none; cursor: pointer; transition: background 0.15s; }
+  .form-submit:hover { background: var(--accent-hover); }
+</style>
+</head>
+<body>
+<script src="/static/shared-header.js"></script>
+
+<div class="hero">
+  <div class="hero-eyebrow">SUPPORT</div>
+  <h1>支援服務</h1>
+  <p class="hero-sub">產品保固、維修申請、退換貨政策，我們陪您每一步。</p>
+</div>
+
+<!-- 快速入口 -->
+<div class="wrap">
+  <div class="sec-title">我需要協助</div>
+  <div class="card-grid">
+    <div class="info-card">
+      <div class="card-icon">🛡️</div>
+      <div class="card-title">保固查詢</div>
+      <div class="card-desc">購買後享有一年原廠保固，涵蓋主機電路板、感應器及螢幕顯示異常。</div>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">🔧</div>
+      <div class="card-title">維修申請</div>
+      <div class="card-desc">填寫下方表單或來信說明問題，技術人員將在 1–2 個工作天內聯繫您。</div>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">↩️</div>
+      <div class="card-title">退換貨</div>
+      <div class="card-desc">收到商品 7 日內如有瑕疵，可申請換貨；非人為損壞者提供無條件退貨。</div>
+    </div>
+    <div class="info-card">
+      <div class="card-icon">💬</div>
+      <div class="card-title">常見問題</div>
+      <div class="card-desc">許多問題已整理在 FAQ 頁面，建議先查閱，大多問題可立即解決。</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 保固政策 -->
+<div class="wrap">
+  <div class="sec-title">保固政策</div>
+  <table class="policy-table">
+    <thead>
+      <tr>
+        <th>項目</th>
+        <th>保固範圍</th>
+        <th>期限</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>主機電路板</strong></td>
+        <td><span class="badge badge-green">涵蓋</span>原廠瑕疵、元件故障</td>
+        <td>購買日起 1 年</td>
+      </tr>
+      <tr>
+        <td><strong>感應器組件</strong></td>
+        <td><span class="badge badge-green">涵蓋</span>非人為損壞之故障</td>
+        <td>購買日起 1 年</td>
+      </tr>
+      <tr>
+        <td><strong>TFT 螢幕</strong></td>
+        <td><span class="badge badge-green">涵蓋</span>顯示異常、背光故障</td>
+        <td>購買日起 1 年</td>
+      </tr>
+      <tr>
+        <td><strong>外殼與按鍵</strong></td>
+        <td><span class="badge badge-red">不涵蓋</span>正常磨損、刮傷</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td><strong>人為損壞</strong></td>
+        <td><span class="badge badge-red">不涵蓋</span>跌落、進水、自行拆修</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="divider"></div>
+
+<!-- 維修流程 -->
+<div class="wrap">
+  <div class="sec-title">維修申請流程</div>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <div class="step-title">填寫申請表單</div>
+        <div class="step-desc">於下方填寫問題描述、裝置 ID 及聯絡資訊，或直接來信說明狀況。</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <div class="step-title">技術確認</div>
+        <div class="step-desc">技術人員將於 1–2 個工作天內聯繫您，確認問題類型並告知後續步驟。</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <div class="step-title">寄回裝置（如需）</div>
+        <div class="step-desc">保固內維修免費，運費由我方負擔（台灣地區）。請使用原包裝或充分緩衝材料寄回。</div>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <div class="step-title">完成維修 & 寄回</div>
+        <div class="step-desc">維修完成後（一般 3–5 個工作天）我們會回寄裝置，並附上維修報告。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 聯絡方式 -->
+<div class="wrap">
+  <div class="sec-title">聯絡我們</div>
+  <div class="contact-methods">
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="c-label">服務時間</div>
+        <div class="c-value">週一 ～ 週五，09:00 – 18:00</div>
+        <div class="c-hint">國定假日休息，急件請填寫線上表單</div>
+      </div>
+      <div class="contact-icon">🕘</div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="c-label">維修寄送地址</div>
+        <div class="c-value">台灣（詳細地址申請後提供）</div>
+        <div class="c-hint">請勿直接寄送，需先取得 RMA 編號</div>
+      </div>
+      <div class="contact-icon">📦</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- 申請表單 -->
+<div class="wrap">
+  <div class="sec-title">線上申請表單</div>
+  <div class="support-form">
+    <div class="form-row">
+      <label>姓名</label>
+      <input type="text" placeholder="您的稱呼">
+    </div>
+    <div class="form-row">
+      <label>裝置 ID（選填）</label>
+      <input type="text" placeholder="例如：devece984b9">
+      <div class="form-hint">可在模擬器設定頁面查閱裝置 ID</div>
+    </div>
+    <div class="form-row">
+      <label>問題類型</label>
+      <select>
+        <option>請選擇問題類型</option>
+        <option>感應器異常</option>
+        <option>WiFi 連線問題</option>
+        <option>螢幕顯示異常</option>
+        <option>無法開機</option>
+        <option>成績上傳失敗</option>
+        <option>退換貨申請</option>
+        <option>其他</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label>問題描述</label>
+      <textarea placeholder="請詳細描述問題發生的情況、頻率，以及已嘗試的處理方式…"></textarea>
+    </div>
+    <button class="form-submit">送出申請</button>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <h3>還有其他問題？</h3>
+  <p>查閱常見問題 FAQ，或直接寄信給我們的支援團隊。</p>
+  <div class="cta-btns">
+    <a href="/faq" class="btn-outline">常見問題 FAQ</a>
+    <a href="/" class="btn-primary">返回首頁</a>
+  </div>
+</div>
+
+<footer>
+  <div>© 2026 智能閹雞模型</div>
+  <div class="footer-links">
+    <a href="/">首頁</a>
+    <a href="/buy">購買模擬器</a>
+    <a href="/faq">常見問題</a>
+    <a href="/support">支援服務</a>
+  </div>
+  <button onclick="document.getElementById('disclaimer-modal').classList.remove('hidden')" class="footer-disc-btn">免責聲明與安全注意事項</button>
+</footer>
+
+<div id="disclaimer-modal" class="disc-overlay hidden" onclick="if(event.target===this)this.classList.add('hidden')">
+  <div class="disc-box">
+    <button class="disc-close" onclick="document.getElementById('disclaimer-modal').classList.add('hidden')">✕</button>
+    <h2 style="margin-bottom:16px;font-size:1.1rem;">免責聲明與安全注意事項</h2>
+    <div style="font-size:0.86rem;line-height:1.8;color:var(--text);">
+      <p style="margin-bottom:12px;"><strong>1. 僅供教育訓練用途</strong><br>本模擬器及網站所有功能，僅供畜牧業相關人員之教育訓練及技術練習使用，不得用於任何商業手術服務。</p>
+      <p style="margin-bottom:12px;"><strong>2. 不替代專業訓練</strong><br>本系統為輔助學習工具，無法完全複製真實手術情境。實際操作前，請務必接受合格獸醫師或畜牧專家的專業指導。</p>
+      <p style="margin-bottom:12px;"><strong>3. 動物福利聲明</strong><br>本系統設計理念在於「以科技取代犧牲」，使用模型替代真實動物進行練習，符合 3R 原則（替代、減少、改良）。</p>
+      <p style="margin-bottom:12px;"><strong>4. 成績資料聲明</strong><br>排行榜成績為訓練紀錄，僅供參考，不代表實際手術能力。存活率等指標為模擬數值，與真實手術結果無關。</p>
+      <p style="margin-bottom:0;"><strong>5. 責任限制</strong><br>本系統開發者對因使用本系統資訊而產生的任何直接或間接損失，不承擔法律責任。使用者應自行評估風險並承擔相應責任。</p>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

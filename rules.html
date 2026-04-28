@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>評分規則 — 智能閹雞模型</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #fff;
+    --surface2: #f0f1f5;
+    --accent: #3949ab;
+    --accent-light: #5c6bc0;
+    --text: #1a1a2e;
+    --text-muted: #666;
+    --easy: #2e7d32;
+    --normal: #f57c00;
+    --hard: #c62828;
+    --border: #e0e0e0;
+    --radius: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #252540;
+      --text: #e8e8f0;
+      --text-muted: #9090a8;
+      --border: #2e2e4a;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding-bottom: 40px;
+  }
+  header {
+    background: linear-gradient(135deg, var(--accent) 0%, #1a237e 100%);
+    color: #fff;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+  header a {
+    color: rgba(255,255,255,0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    padding: 4px 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    transition: background 0.2s;
+  }
+  header a:hover { background: rgba(255,255,255,0.15); }
+  header h1 { font-size: 1.3rem; flex: 1; }
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 16px;
+  }
+  .section {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--accent);
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 8px;
+  }
+  p { line-height: 1.7; color: var(--text); margin-bottom: 10px; }
+  p:last-child { margin-bottom: 0; }
+  .muted { color: var(--text-muted); font-size: 0.88rem; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+  th {
+    background: var(--surface2);
+    padding: 9px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--surface2); }
+  .sensor-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .sensor-card {
+    flex: 1;
+    min-width: 180px;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .sensor-h1 { background: #e8f5e9; border: 2px solid var(--easy); }
+  .sensor-h2 { background: #fff8e1; border: 2px solid var(--normal); }
+  .sensor-h3 { background: #ffebee; border: 2px solid var(--hard); }
+  @media (prefers-color-scheme: dark) {
+    .sensor-h1 { background: #1b3a1c; }
+    .sensor-h2 { background: #3a2e00; }
+    .sensor-h3 { background: #3a1212; }
+  }
+  .sensor-icon { font-size: 2rem; margin-bottom: 6px; }
+  .sensor-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+  .sensor-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; }
+  .diff-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+  .easy { background: #e8f5e9; color: var(--easy); }
+  .normal { background: #fff8e1; color: var(--normal); }
+  .hard { background: #ffebee; color: var(--hard); }
+  .formula-box {
+    background: var(--surface2);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 12px 0;
+    font-family: monospace;
+    font-size: 1rem;
+  }
+  .tip {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 10px;
+    font-size: 0.87rem;
+    color: var(--text-muted);
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .tag-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .tag {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .survival-good { color: var(--easy); font-weight: 700; }
+  .survival-ok { color: var(--normal); font-weight: 700; }
+  .survival-bad { color: var(--hard); font-weight: 700; }
+  .back-link-mobile {
+    display: none;
+    text-align: center;
+    padding: 16px;
+  }
+  @media (max-width: 480px) {
+    .back-link-mobile { display: block; }
+    .sensor-row { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="/">← 返回排名</a>
+  <h1>📋 閹雞評分規則</h1>
+  <a href="/simulator">🎮 模擬器</a>
+</header>
+
+<div class="container">
+
+  <!-- Overview -->
+  <div class="section">
+    <div class="section-title">🐔 系統概覽</div>
+    <p>智能閹雞模型透過三個感應器（H1、H2、H3）評估操作者在閹雞手術中的表現。系統提供<strong>評分模式</strong>與<strong>練習模式</strong>兩種體驗。</p>
+    <div class="tag-row">
+      <span class="tag">評分模式</span>
+      <span class="tag">練習模式</span>
+      <span class="tag">三種難度</span>
+      <span class="tag">綜合排名</span>
+    </div>
+  </div>
+
+  <!-- Sensors -->
+  <div class="section">
+    <div class="section-title">📡 感應器說明</div>
+    <div class="sensor-row">
+      <div class="sensor-card sensor-h1">
+        <div class="sensor-icon">✅</div>
+        <div class="sensor-name" style="color:var(--easy)">H1 — 完成</div>
+        <div class="sensor-desc">操作完成感應器。觸發後視為本次手術正常結束，計算最終分數與存活率。</div>
+      </div>
+      <div class="sensor-card sensor-h2">
+        <div class="sensor-icon">⚠️</div>
+        <div class="sensor-name" style="color:var(--normal)">H2 — 失誤</div>
+        <div class="sensor-desc">失誤感應器。每次觸發依難度扣除分數，分數可扣至 0 後結束。可連續觸發多次。</div>
+      </div>
+      <div class="sensor-card sensor-h3">
+        <div class="sensor-icon">💀</div>
+        <div class="sensor-name" style="color:var(--hard)">H3 — 致命</div>
+        <div class="sensor-desc">致命錯誤感應器。觸發後分數立即歸零，手術強制結束，存活率為最低區間。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring rules -->
+  <div class="section">
+    <div class="section-title">🏆 評分規則（評分模式）</div>
+    <p>評分模式開始時分數為 <strong>100 分</strong>，操作過程中依感應器觸發狀況進行扣分：</p>
+    <table>
+      <thead>
+        <tr>
+          <th>難度</th>
+          <th>每次 H2 扣分</th>
+          <th>H3 效果</th>
+          <th>H1 效果</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="diff-badge easy">簡單</span></td>
+          <td>扣 10 分</td>
+          <td>分數歸零 → 強制結束</td>
+          <td>正常結束，計算成績</td>
+        </tr>
+        <tr>
+          <td><span class="diff-badge normal">普通</span></td>
+          <td>扣 15 分</td>
+          <td>分數歸零 → 強制結束</td>
+          <td>正常結束，計算成績</td>
+        </tr>
+        <tr>
+          <td><span class="diff-badge hard">困難</span></td>
+          <td>扣 20 分</td>
+          <td>分數歸零 → 強制結束</td>
+          <td>正常結束，計算成績</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="tip">ℹ️ H2 可連續觸發，分數扣至 0 後手術自動結束（不可為負分）。目前評分模式無時間限制。</div>
+  </div>
+
+  <!-- Survival rate -->
+  <div class="section">
+    <div class="section-title">💉 存活率對照表</div>
+    <p>手術結束後，依最終分數對應存活率區間（顯示為該區間內的數值）：</p>
+    <table>
+      <thead>
+        <tr>
+          <th>最終分數</th>
+          <th>存活率區間</th>
+          <th>評價</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>≥ 80 分</td>
+          <td class="survival-good">85% – 99%</td>
+          <td>優良 ⭐</td>
+        </tr>
+        <tr>
+          <td>60 – 79 分</td>
+          <td class="survival-ok">66% – 83%</td>
+          <td>合格</td>
+        </tr>
+        <tr>
+          <td>40 – 59 分</td>
+          <td class="survival-ok">46% – 55%</td>
+          <td>待改善</td>
+        </tr>
+        <tr>
+          <td>&lt; 40 分</td>
+          <td class="survival-bad">11% – 30%</td>
+          <td>危險 ⚠️</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="tip">ℹ️ H3 致命觸發歸零，存活率落在 11%–30% 區間，與分數 0 相同。</div>
+  </div>
+
+  <!-- Composite ranking -->
+  <div class="section">
+    <div class="section-title">📊 綜合排名公式</div>
+    <p>為使困難模式與簡單模式同分時，困難者排名較前，系統採用<strong>難度加權綜合分</strong>進行排名：</p>
+    <div class="formula-box">綜合分 = 原始分數 × 難度係數</div>
+    <table>
+      <thead>
+        <tr>
+          <th>難度</th>
+          <th>難度係數</th>
+          <th>範例（原始 80 分）</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="diff-badge easy">簡單</span></td>
+          <td>× 1.0</td>
+          <td>80 × 1.0 = <strong>80 分</strong></td>
+        </tr>
+        <tr>
+          <td><span class="diff-badge normal">普通</span></td>
+          <td>× 1.2</td>
+          <td>80 × 1.2 = <strong>96 分</strong></td>
+        </tr>
+        <tr>
+          <td><span class="diff-badge hard">困難</span></td>
+          <td>× 1.5</td>
+          <td>80 × 1.5 = <strong>120 分</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="tip">ℹ️ 點擊排名表中任一記錄，可在成績卡片中看到該筆記錄的綜合分計算詳情。</div>
+  </div>
+
+  <!-- Practice mode -->
+  <div class="section">
+    <div class="section-title">🎓 練習模式說明</div>
+    <p>練習模式不計入排名，提供 7 個操作步驟引導，適合新手學習正確操作流程：</p>
+    <table>
+      <thead>
+        <tr><th>步驟</th><th>名稱</th><th>說明</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>固定</td><td>固定雞隻，確認穩定後進行後續步驟</td></tr>
+        <tr><td>2</td><td>切開</td><td>在適當位置切開，控制切口大小</td></tr>
+        <tr><td>3</td><td>擴張</td><td>擴張切口，便於後續操作</td></tr>
+        <tr><td>4</td><td>尋找</td><td>尋找目標組織，確認位置</td></tr>
+        <tr><td>5</td><td>破膜</td><td>小心破開包膜，避免傷及周圍組織</td></tr>
+        <tr><td>6</td><td>摘除</td><td>完整摘除目標組織</td></tr>
+        <tr><td>7</td><td>術後照護</td><td>縫合傷口，進行術後消毒與照護</td></tr>
+      </tbody>
+    </table>
+    <div class="tip">ℹ️ 練習模式中，H1 推進下一步驟；H2 標記本步驟警告；H3 顯示嚴重錯誤提示。練習模式結束條件由螢幕上按鈕控制。</div>
+  </div>
+
+  <!-- Badges -->
+  <div class="section">
+    <div class="section-title">🏅 成就徽章</div>
+    <p>系統根據累積記錄自動授予成就徽章，顯示於排名表與成績卡片中：</p>
+    <table>
+      <thead>
+        <tr><th>徽章</th><th>名稱</th><th>條件</th></tr>
+      </thead>
+      <tbody>
+        <tr><td style="font-size:1.2rem;">🌟</td><td>高手</td><td>最佳成績達到 90 分以上</td></tr>
+        <tr><td style="font-size:1.2rem;">💪</td><td>困難挑戰者</td><td>困難模式累積達 3 場以上</td></tr>
+        <tr><td style="font-size:1.2rem;">⚡</td><td>閃電手速</td><td>在 1 分鐘內完成且分數 ≥ 70 分</td></tr>
+        <tr><td style="font-size:1.2rem;">🎖</td><td>老玩家</td><td>累積記錄達 10 場以上</td></tr>
+        <tr><td style="font-size:1.2rem;">💀</td><td>全滅</td><td>曾有存活率歸零記錄</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<div class="back-link-mobile">
+  <a href="/" style="color:var(--accent);">← 返回排名首頁</a>
+</div>
+
+</body>
+</html>
