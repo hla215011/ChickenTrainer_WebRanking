@@ -17,7 +17,10 @@ import gzip
 import mimetypes
 import random
 import string
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# 台北時區 (UTC+8) — 雲端 server 預設 UTC，要轉台灣時間
+TAIPEI_TZ = timezone(timedelta(hours=8))
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs, unquote
 
@@ -97,7 +100,7 @@ def make_rename_pin():
 
 
 def now_str():
-    return datetime.now().strftime("%Y-%m-%d %H:%M")
+    return datetime.now(TAIPEI_TZ).strftime("%Y-%m-%d %H:%M")
 
 
 def log_activity(data, action, detail=""):
@@ -209,7 +212,9 @@ class ChickenHandler(BaseHTTPRequestHandler):
         parsed = urlparse(self.path)
         path = parsed.path.rstrip("/") or "/"
 
-        if path == "/api/status":
+        if path == "/api/time":
+            self.send_json({"time": now_str(), "tz": "Asia/Taipei"})
+        elif path == "/api/status":
             self.handle_status()
         elif path == "/api/records/all":
             self.handle_get_records_all()
@@ -778,7 +783,7 @@ class ChickenHandler(BaseHTTPRequestHandler):
             "id": f"dev{make_id()}",
             "name": name,
             "key": key,
-            "created": datetime.now().strftime("%Y-%m-%d")
+            "created": datetime.now(TAIPEI_TZ).strftime("%Y-%m-%d")
         }
         data = load_data()
         data["devices"].append(device)
@@ -954,7 +959,7 @@ class ChickenHandler(BaseHTTPRequestHandler):
             return
         data = load_data()
         body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
-        filename = f"chicken_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        filename = f"chicken_backup_{datetime.now(TAIPEI_TZ).strftime('%Y%m%d_%H%M%S')}.json"
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
@@ -1007,7 +1012,7 @@ class ChickenHandler(BaseHTTPRequestHandler):
 
         # UTF-8 BOM for Excel compatibility
         csv_bytes = "\ufeff".encode("utf-8") + output.getvalue().encode("utf-8")
-        filename = f"chicken_records_{datetime.now().strftime('%Y%m%d')}.csv"
+        filename = f"chicken_records_{datetime.now(TAIPEI_TZ).strftime('%Y%m%d')}.csv"
         self.send_response(200)
         self.send_header("Content-Type", "text/csv; charset=utf-8")
         self.send_header("Content-Disposition", f'attachment; filename="{filename}"')

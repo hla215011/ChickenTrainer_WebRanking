@@ -9,9 +9,8 @@
 // ============================================================
 // CONFIG
 // ============================================================
-const char* WIFI_SSID_HOME  = "Home XD4";
-const char* WIFI_PASS_HOME  = "0933997111213";
-const char* WIFI_SSID_PHONE = "JIPXV";
+// 只連手機熱點（JIPX7）— 比賽現場開熱點即可
+const char* WIFI_SSID_PHONE = "JIPX7";
 const char* WIFI_PASS_PHONE = "88888888";
 const char* SERVER     = "https://chickentrainer-webranking.onrender.com";
 const char* DEVICE_KEY = "CHICKEN_SECRET_2026";
@@ -52,11 +51,41 @@ bool tryWiFi(const char* ssid, const char* pass) {
 
 bool connectWiFi() {
   WiFi.mode(WIFI_STA);
-  // 先試家裡，連不上再試手機熱點
-  if (tryWiFi(WIFI_SSID_HOME, WIFI_PASS_HOME)) return true;
+  // 只連手機熱點
   if (tryWiFi(WIFI_SSID_PHONE, WIFI_PASS_PHONE)) return true;
-  Serial.println("[WiFi] all failed");
+  Serial.println("[WiFi] phone hotspot not found");
   return false;
+}
+
+// 從 server 抓當前時間，回傳 TIME:YYYY-MM-DD HH:MM
+void fetchTime() {
+  if (WiFi.status() != WL_CONNECTED) connectWiFi();
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("TIME_FAIL");
+    return;
+  }
+  WiFiClientSecure client;
+  client.setInsecure();
+  client.setTimeout(15000);
+  HTTPClient http;
+  http.setTimeout(15000);
+  String url = String(SERVER) + "/api/time";
+  if (!http.begin(client, url)) { Serial.println("TIME_FAIL"); return; }
+  int code = http.GET();
+  if (code == 200) {
+    String resp = http.getString();
+    int p = resp.indexOf("\"time\":");
+    if (p >= 0) {
+      int q = resp.indexOf("\"", p + 8);
+      String t = resp.substring(p + 8, q);
+      Serial.print("TIME:"); Serial.println(t);
+    } else {
+      Serial.println("TIME_FAIL");
+    }
+  } else {
+    Serial.println("TIME_FAIL");
+  }
+  http.end();
 }
 
 void doUpload(int sc, int sv, int dr, int df) {
@@ -121,13 +150,18 @@ void loop() {
       if (linePos > 0) {
         lineBuf[linePos] = 0;
         Serial.print("[RX] "); Serial.println(lineBuf);
-        int sc=0,sv=0,dr=0,df=1;
-        char *p;
-        if ((p=strstr(lineBuf,"SCORE:"))) sc=atoi(p+6);
-        if ((p=strstr(lineBuf,"SURV:")))  sv=atoi(p+5);
-        if ((p=strstr(lineBuf,"DUR:")))   dr=atoi(p+4);
-        if ((p=strstr(lineBuf,"DIFF:")))  df=atoi(p+5);
-        doUpload(sc, sv, dr, df);
+        // 處理時間查詢指令 TIME?
+        if (strncmp(lineBuf, "TIME?", 5) == 0) {
+          fetchTime();
+        } else {
+          int sc=0,sv=0,dr=0,df=1;
+          char *p;
+          if ((p=strstr(lineBuf,"SCORE:"))) sc=atoi(p+6);
+          if ((p=strstr(lineBuf,"SURV:")))  sv=atoi(p+5);
+          if ((p=strstr(lineBuf,"DUR:")))   dr=atoi(p+4);
+          if ((p=strstr(lineBuf,"DIFF:")))  df=atoi(p+5);
+          doUpload(sc, sv, dr, df);
+        }
         linePos = 0;
       }
     } else if (linePos < sizeof(lineBuf) - 1) {
