@@ -1,0 +1,2 @@
+# 此專案僅使用 Python 3.11.10 標準函式庫 (http.server, json, secrets, hashlib, ...)
+# 不需要任何外部依賴。此檔案僅為符合 Render build 流程而存在。
