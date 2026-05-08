@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>個資確認系統</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<!-- ════════════════════ 登入頁 ════════════════════ -->
+<section id="page-login" class="page">
+  <div class="login-card">
+    <div class="logo">
+      <div class="logo-circle">資</div>
+      <h1>個資確認系統</h1>
+      <p class="subtitle">Personal Info Confirmation</p>
+    </div>
+    <form id="login-form" autocomplete="on">
+      <label>
+        <span>帳號</span>
+        <input type="text" id="login-username" required autofocus autocomplete="username">
+      </label>
+      <label>
+        <span>密碼</span>
+        <input type="password" id="login-password" required autocomplete="current-password">
+      </label>
+      <button type="submit" class="btn-primary">登入</button>
+      <div id="login-error" class="error-msg"></div>
+    </form>
+    <div class="hint">
+      <strong>測試帳號 (密碼皆為帳號名)：</strong>
+      <ul>
+        <li><code>test01</code> ~ <code>test30</code> — 學生</li>
+        <li><code>officer01</code> — 學藝股長 (兼 13 號學生)</li>
+        <li><code>registrar01</code> — 註冊組長</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ 共用 Header ════════════════════ -->
+<header id="topbar" class="hidden">
+  <div class="topbar-left">
+    <span class="badge" id="role-badge"></span>
+    <span id="display-name"></span>
+  </div>
+  <div class="topbar-right">
+    <span id="classroom-info"></span>
+    <button id="logout-btn" class="btn-ghost">登出</button>
+  </div>
+</header>
+
+<!-- ════════════════════ 學生頁 ════════════════════ -->
+<section id="page-student" class="page hidden">
+  <div class="container">
+    <h2>📋 我的個資確認</h2>
+    <p class="lead">請仔細核對下列個資，正確無誤後請按下方「確認資料正確」按鈕。<br>
+       如有任何錯誤，請在備註欄留言並聯繫註冊組。</p>
+
+    <div id="confirm-status-banner"></div>
+
+    <div class="info-grid" id="student-info">
+      <!-- 由 JS 填入 -->
+    </div>
+
+    <div class="card">
+      <h3>📝 備註 / 反映錯誤</h3>
+      <textarea id="student-note" placeholder="若資料有錯，請說明哪一欄位錯了、應該是什麼…"></textarea>
+      <button id="save-note-btn" class="btn-secondary">儲存備註</button>
+      <span id="note-saved-msg" class="muted small"></span>
+    </div>
+
+    <div class="action-bar">
+      <button id="confirm-btn" class="btn-primary big">✓ 確認資料正確</button>
+      <span class="muted small">確認後若需修改，請聯繫註冊組</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════ 學藝股長頁 ════════════════════ -->
+<section id="page-officer" class="page hidden">
+  <div class="container">
+    <h2>👀 全班確認進度</h2>
+    <p class="lead">您只能看到「誰確認了 / 誰還沒」的狀態，<strong>看不到他們的個資內容</strong>。<br>
+       請督促未確認的同學盡快上線確認。</p>
+
+    <div class="summary-bar" id="officer-summary"></div>
+
+    <div class="card">
+      <table class="status-table">
+        <thead>
+          <tr><th>座號</th><th>姓名</th><th>狀態</th><th>確認時間</th></tr>
+        </thead>
+        <tbody id="officer-tbody"></tbody>
+      </table>
+    </div>
+
+    <details class="card">
+      <summary><strong>我自己的個資</strong> (點此展開 — 您身為班上一員也要確認)</summary>
+      <div id="officer-self-info" style="margin-top:12px;"></div>
+      <div class="action-bar" style="justify-content:flex-start;">
+        <button id="officer-confirm-btn" class="btn-primary">✓ 確認我的資料正確</button>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ════════════════════ 註冊組長頁 ════════════════════ -->
+<section id="page-registrar" class="page hidden">
+  <div class="container">
+    <h2>🗂️ 全班完整個資總覽</h2>
+    <p class="lead">註冊組權限 — 可檢視/修改所有個資。請依個資法妥善保管。</p>
+
+    <div class="summary-bar" id="registrar-summary"></div>
+
+    <div class="toolbar">
+      <input id="search-input" type="text" placeholder="搜尋姓名 / 座號 / 學號...">
+      <select id="filter-status">
+        <option value="all">全部</option>
+        <option value="confirmed">已確認</option>
+        <option value="pending">待確認</option>
+      </select>
+      <button id="export-btn" class="btn-secondary">匯出 JSON</button>
+    </div>
+
+    <div class="card">
+      <table class="full-table">
+        <thead>
+          <tr>
+            <th>座</th><th>姓名</th><th>性別</th><th>學號</th><th>身分證</th>
+            <th>生日</th><th>電話</th><th>地址</th><th>父姓名</th><th>父電話</th>
+            <th>母姓名</th><th>母電話</th><th>狀態</th><th>備註</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="registrar-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 編輯 Modal (註冊組用) -->
+<div id="edit-modal" class="modal hidden">
+  <div class="modal-content">
+    <button class="modal-close" id="edit-close">×</button>
+    <h3>修正個資 — 座號 <span id="edit-seat"></span> <span id="edit-name"></span></h3>
+    <form id="edit-form" class="info-grid"></form>
+    <div class="action-bar">
+      <button id="edit-save-btn" class="btn-primary">儲存修改</button>
+      <button id="edit-reset-confirm-btn" class="btn-warning">重置確認狀態</button>
+    </div>
+    <div id="edit-msg" class="muted small"></div>
+  </div>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

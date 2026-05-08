@@ -1,0 +1,226 @@
+[
+  {
+    "username": "test01",
+    "password_hash": "678e82d907d3e6e71f81d5cf3ddacc3671dc618c38a1b7a9f9393a83d025b296",
+    "role": "student",
+    "linked_seat": 1,
+    "display_name": "郭祐霆"
+  },
+  {
+    "username": "test02",
+    "password_hash": "e1c10806027637577653a25120e4a8437be5207c2e250181823a4fc323eaee39",
+    "role": "student",
+    "linked_seat": 2,
+    "display_name": "蔡雅婷"
+  },
+  {
+    "username": "test03",
+    "password_hash": "583a28281f4bfdd44741598f4936203ae0bdce11af0dba28045de6347205f8bf",
+    "role": "student",
+    "linked_seat": 3,
+    "display_name": "張怡君"
+  },
+  {
+    "username": "test04",
+    "password_hash": "f720b3af7f840c8befb62fd1c8b6a2c6ff1dec71afd16ab4643efa06cf8c1708",
+    "role": "student",
+    "linked_seat": 4,
+    "display_name": "莊心瑜"
+  },
+  {
+    "username": "test05",
+    "password_hash": "e7fd31a6cedd36da17c97b877eb07751d377631eaa58918e2a4a803a45a97862",
+    "role": "student",
+    "linked_seat": 5,
+    "display_name": "蔡詩涵"
+  },
+  {
+    "username": "test06",
+    "password_hash": "c20f38b5589a5587f737a654986e94d12d37257e840dbcb0e7fb939ca8e530e0",
+    "role": "student",
+    "linked_seat": 6,
+    "display_name": "何依璇"
+  },
+  {
+    "username": "test07",
+    "password_hash": "f7b32379e406d7e9dcc576e187a35b7ea6be5029943ed605aea2e3db4fc445cd",
+    "role": "student",
+    "linked_seat": 7,
+    "display_name": "徐凱翔"
+  },
+  {
+    "username": "test08",
+    "password_hash": "560ec4a825e1524b8bd593f08932340567abe70c6b4de864de844a0fb72fcefd",
+    "role": "student",
+    "linked_seat": 8,
+    "display_name": "張品瑜"
+  },
+  {
+    "username": "test09",
+    "password_hash": "44ed4b7a244f8303f3e322c095b110bfb4a048d4eeb21d0a0ed4b6dba647b34f",
+    "role": "student",
+    "linked_seat": 9,
+    "display_name": "黃柏翰"
+  },
+  {
+    "username": "test10",
+    "password_hash": "ec2738feb2bbb0bc783eb4667903391416372ba6ed8b8dddbebbdb37e5102473",
+    "role": "student",
+    "linked_seat": 10,
+    "display_name": "陳凱翔"
+  },
+  {
+    "username": "test11",
+    "password_hash": "744ea9ec6fa0a83e9764b4e323d5be6b55a5accfc7fe4c08eab6a8de1fca4855",
+    "role": "student",
+    "linked_seat": 11,
+    "display_name": "蘇祐霆"
+  },
+  {
+    "username": "test12",
+    "password_hash": "a98ec5c5044800c88e862f007b98d89815fc40ca155d6ce7909530d792e909ce",
+    "role": "student",
+    "linked_seat": 12,
+    "display_name": "周凱翔"
+  },
+  {
+    "username": "test13",
+    "password_hash": "166fb78f0f44d271a2d9065272a67ba373c3266b59d85847c02ef695af0cbf3f",
+    "role": "student",
+    "linked_seat": 13,
+    "display_name": "蕭彥廷"
+  },
+  {
+    "username": "test14",
+    "password_hash": "40cca5cc13abf91c7d5a72c0aea9bcbea4108946e67f24c0c23003cbf307efa2",
+    "role": "student",
+    "linked_seat": 14,
+    "display_name": "徐宗翰"
+  },
+  {
+    "username": "test15",
+    "password_hash": "ebb39b342baead7aa52c0bcd6c0d4ba061b42f3a9dd6bafa2407a096b91b2450",
+    "role": "student",
+    "linked_seat": 15,
+    "display_name": "劉馨儀"
+  },
+  {
+    "username": "test16",
+    "password_hash": "8ffd063b93a29f84389a635552740a9f0a7234169994158fb19692f5964dd7f5",
+    "role": "student",
+    "linked_seat": 16,
+    "display_name": "謝祐霆"
+  },
+  {
+    "username": "test17",
+    "password_hash": "813e41d4092656716cb0b46a1e5002857066cdaef8decf182ae15abf0b43b8d5",
+    "role": "student",
+    "linked_seat": 17,
+    "display_name": "洪依璇"
+  },
+  {
+    "username": "test18",
+    "password_hash": "b3c0e5febe1ec8875cd4a06fa4a99abf270de3f131d83a65f897322edbc12aec",
+    "role": "student",
+    "linked_seat": 18,
+    "display_name": "蕭靜怡"
+  },
+  {
+    "username": "test19",
+    "password_hash": "840b1bf550a873a1dbed1381abe379cb9f1e76067b6de54bcd37367ce6ca3c0a",
+    "role": "student",
+    "linked_seat": 19,
+    "display_name": "呂宇辰"
+  },
+  {
+    "username": "test20",
+    "password_hash": "946cc198869790373cd8424cd9073e9e29aaa17b6f6a6ec55b38110cae856385",
+    "role": "student",
+    "linked_seat": 20,
+    "display_name": "楊宛庭"
+  },
+  {
+    "username": "test21",
+    "password_hash": "aefd57c8c2afdaad0a5352b0ce87131a85a08f5c87a87f166f0ce1e213f4c0fd",
+    "role": "student",
+    "linked_seat": 21,
+    "display_name": "周竣豪"
+  },
+  {
+    "username": "test22",
+    "password_hash": "759cfde265aaddb6f728ed08d97862bbd9b56fd39de97a049c640b4c5b70aac9",
+    "role": "student",
+    "linked_seat": 22,
+    "display_name": "高佳穎"
+  },
+  {
+    "username": "test23",
+    "password_hash": "4e758d4760a6cffc347cdb45f0966d20f481bad806731c4c0e44f21cf9d90bb5",
+    "role": "student",
+    "linked_seat": 23,
+    "display_name": "邱建宏"
+  },
+  {
+    "username": "test24",
+    "password_hash": "65b440e2e0a921e4a9adc14445374d498a95d05f299d791548d6838eb0ae65df",
+    "role": "student",
+    "linked_seat": 24,
+    "display_name": "賴依璇"
+  },
+  {
+    "username": "test25",
+    "password_hash": "0342840f6340d15691f4be1c0e0157fb0983992c4f436c18267d41dbe6bb74a2",
+    "role": "student",
+    "linked_seat": 25,
+    "display_name": "呂承恩"
+  },
+  {
+    "username": "test26",
+    "password_hash": "ebe9f9116525a660751600a7f897df4b03d45b5dfc17ae36a9dd33b34f9849b4",
+    "role": "student",
+    "linked_seat": 26,
+    "display_name": "張詩涵"
+  },
+  {
+    "username": "test27",
+    "password_hash": "a45c66cfc88915d1fc91bf998ea726b34c530b63b38984f5a0f313766b799808",
+    "role": "student",
+    "linked_seat": 27,
+    "display_name": "李若芸"
+  },
+  {
+    "username": "test28",
+    "password_hash": "94384f0790043d99b7b85cb0f518eccdbfdf066b72324e3d996c4d0c738b65b5",
+    "role": "student",
+    "linked_seat": 28,
+    "display_name": "吳志明"
+  },
+  {
+    "username": "test29",
+    "password_hash": "15dfe842cd5eb4a591465c8e8927e16cd2b16e3ca7b4312933d763882f38270f",
+    "role": "student",
+    "linked_seat": 29,
+    "display_name": "楊子翔"
+  },
+  {
+    "username": "test30",
+    "password_hash": "98b96436416b60ef629ebe764dc75bb2d3052145829b24aa43a5168aabf0942d",
+    "role": "student",
+    "linked_seat": 30,
+    "display_name": "劉詩涵"
+  },
+  {
+    "username": "officer01",
+    "password_hash": "ce8e203274fe1073b4fd2945a5e3d5818eab136d2f028a47cfc139bb5567edd0",
+    "role": "officer",
+    "linked_seat": 13,
+    "display_name": "學藝股長 蕭彥廷"
+  },
+  {
+    "username": "registrar01",
+    "password_hash": "3fe5a8a13e8bed2a4e27db52c4395f6fbb363084f3133c66f3b3df3cb4682156",
+    "role": "registrar",
+    "linked_seat": null,
+    "display_name": "註冊組長"
+  }
+]
